@@ -1,0 +1,73 @@
+{
+  "name": "apify-page-analyzer",
+  "version": "0.0.1",
+  "description": "Apify page search for JavaScript",
+  "main": "build/index.js",
+  "keywords": [
+    "apify",
+    "apifier",
+    "crawler",
+    "search"
+  ],
+  "author": {
+    "name": "Apify",
+    "email": "support@apify.com",
+    "url": "https://www.apify.com"
+  },
+  "contributors": [
+    "Jan Curn <jan@apify.com>",
+    "Marek Trunkat <marek@apify.com>",
+    "Jaroslav Hejlek <jaroslav@apify.com>"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apifier/act-page-analyzer"
+  },
+  "bugs": {
+    "url": "https://github.com/apifier/act-page-analyzer/issues"
+  },
+  "homepage": "https://github.com/apifier/act-page-analyzer",
+  "files": [
+    "build"
+  ],
+  "scripts": {
+    "build": "babel src --out-dir build",
+    "build-doc": "npm run clean && npm run build && node ./node_modules/jsdoc/jsdoc.js --package ./package.json -c ./jsdoc/conf.json -d docs",
+    "test": "npm run build && mocha --compilers js:babel-core/register --recursive",
+    "test-cov": "npm run build && babel-node node_modules/isparta/bin/isparta cover --report html --report text node_modules/.bin/_mocha",
+    "prepare": "npm run build",
+    "prepublishOnly": "(test $RUNNING_FROM_SCRIPT || (echo \"You must use publish.sh instead of 'npm publish' directly!\"; exit 1)) && npm test && npm run lint",
+    "clean": "rm -rf build",
+    "lint": "npm run build && eslint src test"
+  },
+  "dependencies": {
+    "async": "^2.5.0",
+    "bluebird": "^3.5.1",
+    "cheerio": "^1.0.0-rc.2",
+    "html-to-json": "^0.6.0",
+    "lodash": "^4.17.4",
+    "puppeteer": "^0.11.0",
+    "request": "^2.83.0"
+  },
+  "devDependencies": {
+    "apify-jsdoc-template": "github:Apifier/apify-jsdoc-template",
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-eslint": "^8.0.1",
+    "babel-preset-env": "^1.6.1",
+    "chai": "^4.1.2",
+    "eslint": "^4.9.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-jsx-a11y": "6.0.2",
+    "eslint-plugin-promise": "^3.6.0",
+    "eslint-plugin-react": "7.4.0",
+    "isparta": "^4.0.0",
+    "jsdoc": "^3.5.5",
+    "jsdoc-export-default-interop": "^0.3.1",
+    "mocha": "^4.0.1",
+    "sinon": "^4.0.1",
+    "sinon-stub-promise": "^4.0.0"
+  }
+}
