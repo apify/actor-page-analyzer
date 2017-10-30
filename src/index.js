@@ -174,6 +174,7 @@ async function analysePage(browser, url, searchFor) {
 }
 
 Apify.main(async () => {
+    console.log('Analysing url from input');
     try {
         // Fetch the input and check it has a valid format
         // You don't need to check the input, but it's a good practice.
@@ -185,8 +186,6 @@ Apify.main(async () => {
             console.dir(input);
             throw new Error('Received invalid input');
         }
-
-        console.log(`Analysing url: ${input.url}`);
 
         const browser = await puppeteer.launch({ args: ['--no-sandbox'], headless: true });
         await analysePage(browser, input.url, input.searchFor);
