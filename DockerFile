@@ -1,4 +1,4 @@
-// This act requires puppeteer and node 8
+# This act requires puppeteer and node 8
 FROM apify/actor-node-puppeteer
 
 # Tell Node.js this is a production environemnt
@@ -9,10 +9,8 @@ COPY . ./
 
 # Install NPM packages, skip optional and development dependencies to keep the image small,
 # avoid logging to much and show log the dependency tree
-RUN npm install --quiet --only=prod --no-optional \
+RUN npm install --quiet --only=prod \
  && npm list
-
-RUN npm run build
 
 # Define that start command
 CMD [ "node", "build/index.js" ]
