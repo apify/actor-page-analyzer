@@ -1,23 +1,27 @@
 import puppeteer from 'puppeteer';
 import _ from 'lodash';
-import async from 'async';
-import fs from 'fs';
 import cheerio from 'cheerio';
+import Apify from 'apify';
+import { typeCheck } from 'type-check';
 
 import evalWindowProperties, { getNativeWindowProperties } from './parse/window-properties';
 import parseResponse from './parse/xhr-requests';
 import parseMetadata from './parse/metadata';
 import parseSchemaOrgData from './parse/schema-org';
 import parseJsonLD from './parse/json-ld';
-import searchData from './search/search';
-
-// eslint-disable-next-line
-const inputURLs = ['http://www.imdb.com/title/tt1856101/?pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=2773216402&pf_rd_r=10DBXD6JX4H7D7C8FEJD&pf_rd_s=right-7&pf_rd_t=15061&pf_rd_i=homepage&ref_=hm_cht_t1'];
-const searchFor = ['blade runner 2049', '8.5', 'ryan gosling'];
+import DOMSearcher from './search/DOMSearcher';
+import TreeSearcher from './search/TreeSearcher';
+import CrawlerGenerator from './generate/Crawler';
 
 let nativeWindowsProperties = null;
 
-async function analysePage({ browser, url }) {
+// Definition of the input
+const INPUT_TYPE = `{
+    url: String,
+    searchFor: [String]
+}`;
+
+async function analysePage(browser, url, searchFor) {
     const result = {
         url,
         // Fix order of fields
@@ -131,26 +135,33 @@ async function analysePage({ browser, url }) {
             allWindowProperties: Object.keys(window), // eslint-disable-line
         }));
 
-        Object.assign(result, _.pick(evalData, 'html', 'text', 'iframeCount', 'scriptCount'));
+        Object.assign(result, _.pick(evalData, 'html', 'text', 'iframeCount', 'scriptCount', 'modernizr', 'html5'));
 
         // Extract list of non-native window properties
         const windowProperties = _.filter(evalData.allWindowProperties, (propName) => !nativeWindowsProperties[propName]);
 
         // Evaluate non-native window properties
         result.windowProperties = await page.evaluate(evalWindowProperties, windowProperties);
-
+        const searchResults = {};
         try {
             const $ = cheerio.load(result.html);
+            const treeSearcher = new TreeSearcher();
             result.schemaOrgData = parseSchemaOrgData({ $ });
+            searchResults.schemaOrg = treeSearcher.find(result.schemaOrgData, searchFor);
             result.metadata = parseMetadata({ $ });
+            searchResults.metadata = treeSearcher.find(result.metadata, searchFor);
             result.jsonld = parseJsonLD({ $ });
+            searchResults.jsonLD = treeSearcher.find(result.jsonld, searchFor);
+            searchResults.window = treeSearcher.find(result.windowProperties, searchFor);
+            const domSearcher = new DOMSearcher({ $ });
+            searchResults.html = domSearcher.find(searchFor);
         } catch (err) {
             console.error(err);
         }
-
-        result.searchResults = searchData(result, searchFor);
-
-        result.analysedAt = new Date();
+        const crawlerGenerator = new CrawlerGenerator();
+        const crawler = crawlerGenerator.generate(searchResults, searchFor);
+        await Apify.setValue('OUTPUT', crawler, { contentType: 'text/javascript' });
+        console.log(crawler);
     } catch (e) {
         console.log(`Loading of web page failed (${url}): ${e}`);
         console.error(e);
@@ -160,39 +171,24 @@ async function analysePage({ browser, url }) {
             page.close().catch((e) => console.log(`Error closing page 2 (${url}): ${e}`));
         }
     }
+}
 
-    console.log(`Page finished: ${result.url}`);
-
-    fs.writeFile('result.json', JSON.stringify(result), (err) => {
-        if (err) {
-            throw err;
+Apify.main(async () => {
+    try {
+        // Fetch the input and check it has a valid format
+        // You don't need to check the input, but it's a good practice.
+        const input = await Apify.getValue('INPUT');
+        if (!typeCheck(INPUT_TYPE, input)) {
+            console.log('Expected input:');
+            console.log(INPUT_TYPE);
+            console.log('Received input:');
+            console.dir(input);
+            throw new Error('Received invalid input');
         }
-    });
-}
 
-async function main() {
-    const browser = await puppeteer.launch({ args: ['--no-sandbox'], headless: true });
-    // Load pages in asynchronous queue with a specified concurrency
-    const queue = async.queue(analysePage, 1);
-
-    // Push all not-yet-crawled URLs to to the queue
-    inputURLs.forEach((url) => {
-        queue.push({
-            browser,
-            url,
-        }, (err) => {
-            if (err) {
-                console.log(`WARNING: Unhandled exception from worker function: ${err.stack || err}`);
-            }
-        });
-    });
-
-    // Wait for the queue to finish all tasks
-    if (inputURLs.length > 0) {
-        await new Promise((resolve) => {
-            queue.drain = resolve;
-        });
+        const browser = await puppeteer.launch({ args: ['--no-sandbox'], headless: true });
+        await analysePage(browser, input.url, input.searchFor);
+    } catch (error) {
+        console.error(error);
     }
-}
-
-main();
+});

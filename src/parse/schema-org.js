@@ -9,7 +9,7 @@ function extractValue($elem) {
         null;
 }
 
-function extractItemScope($itemScope) {
+function extractItemScope($, $itemScope) {
     const item = {
         _type: $itemScope.attr('itemtype'),
     };
@@ -24,7 +24,7 @@ function extractItemScope($itemScope) {
         }).each(function () {
             const $itemProp = $(this);
             let value = $itemProp.is('[itemscope]')
-                ? extractItemScope($itemProp)
+                ? extractItemScope($, $itemProp)
                 : extractValue($itemProp);
             if (typeof value === 'string') {
                 value = value.trim();
@@ -54,7 +54,7 @@ export default function parseSchemaOrgData({ html, $ }) {
     $('[itemscope]').filter(function () {
         return $(this).parents('[itemscope]').length === 0;
     }).each(function () {
-        result.push(extractItemScope($(this)));
+        result.push(extractItemScope($, $(this)));
     });
 
     // remove circular references

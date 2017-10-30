@@ -2,7 +2,7 @@
   "extends": "airbnb-base",
   "plugins": [
     "import",
-    "promise"
+    "promise",
   ],
   "rules": {
     "indent": ["error", 4],

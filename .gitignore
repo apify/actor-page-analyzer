@@ -1,2 +1,9 @@
+// ignore
 node_modules
+coverage
+build
+kv-store-dev/OUTPUT
 result.json
+test.log
+crawer.js
+yarn.lock
