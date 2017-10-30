@@ -186,6 +186,8 @@ Apify.main(async () => {
             throw new Error('Received invalid input');
         }
 
+        console.log(`Analysing url: ${input.url}`);
+
         const browser = await puppeteer.launch({ args: ['--no-sandbox'], headless: true });
         await analysePage(browser, input.url, input.searchFor);
     } catch (error) {
