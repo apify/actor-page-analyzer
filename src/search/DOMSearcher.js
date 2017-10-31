@@ -1,6 +1,5 @@
 import cheerio from 'cheerio';
-import util from 'util';
-import { concat } from 'lodash';
+import { concat, isObject } from 'lodash';
 
 function createSelector(path, item) {
     const completePath = concat(path, item);
@@ -41,7 +40,7 @@ export default class DOMSearcher {
             id: $element.attr('id'),
         };
         const normalizedText = elementText.toLowerCase(); // to lower case to match most results
-        const containsSearchString = this.searchFor.reduce(
+        const containsSearchString = this.normalizedSearch.reduce(
             (contains, searchString) => {
                 if (contains) return true;
                 return normalizedText.indexOf(searchString) !== -1;
@@ -94,11 +93,12 @@ export default class DOMSearcher {
 
     find(searchFor) {
         const { $, searchElement, findPath } = this;
-        if (!searchFor || !Array.isArray(searchFor) || !searchFor.length) {
-            throw new Error('DOMSearcher requires array of search strings.');
+        if (!searchFor || !isObject(searchFor)) {
+            throw new Error('DOMSearcher requires array of search queries.');
         }
 
         this.searchFor = searchFor;
+        this.normalizedSearch = Object.keys(searchFor).map(key => searchFor[key].toLowerCase());
         this.foundPaths = [];
 
         let $body = this.$('body');

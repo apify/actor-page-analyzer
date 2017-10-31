@@ -9,6 +9,7 @@ const WINDOW_COEFICIENT = 0.9;
 const HTML_COEFICIENT = 0.8;
 
 const LETTER_COEFICIENT = 0.01;
+const INCORRECT_CASE_COEFICIENT = 0.9;
 
 function flattenResults(searchResults) {
     const flattendedSearchResults = [];
@@ -26,21 +27,27 @@ function flattenResults(searchResults) {
 
 function processResults(results, searchFor) {
     const processedResults = {};
-    searchFor.forEach(searchString => {
-        processedResults[searchString] = results
+    Object.keys(searchFor).forEach((key) => {
+        const searchString = searchFor[key]
+        const normalizedSearch = searchString.toLowerCase()
+        processedResults[key] = results
             .map(result => {
                 const value = String(result.value || result.text);
                 const normalizedValue = value.toLowerCase();
                 return {
                     ...result,
                     normalizedValue,
+                    containsNormalizedSearch: normalizedValue.indexOf(normalizedSearch) !== -1,
+                    containsNormalSearch: value.indexOf(searchString) !== -1,
                 };
             })
-            .filter(result => result.normalizedValue.indexOf(searchString) !== -1)
+            .filter(result => result.containsNormalizedSearch)
             .map(result => {
-                const extraLetters = result.normalizedValue.replace(searchString);
+                const value = String(result.value || result.text);
+                const extraLetters = result.normalizedValue.replace(normalizedSearch);
                 const extraLettersDeduction = extraLetters.length * LETTER_COEFICIENT;
                 let typeCoeficient = SCHEMA_ORG_COEFICIENT;
+                const caseCoeficient = result.containsNormalSearch ? 1 : INCORRECT_CASE_COEFICIENT;
                 switch (result.type) {
                 case 'metadata':
                     typeCoeficient = METADA_COEFICIENT;
@@ -58,7 +65,7 @@ function processResults(results, searchFor) {
                 }
                 return {
                     ...result,
-                    score: (typeCoeficient - extraLettersDeduction),
+                    score: (typeCoeficient - extraLettersDeduction) * caseCoeficient,
                 };
             })
             .sort((resultA, resultB) => {

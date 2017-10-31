@@ -18,7 +18,7 @@ let nativeWindowsProperties = null;
 // Definition of the input
 const INPUT_TYPE = `{
     url: String,
-    searchFor: [String]
+    searchFor: Object
 }`;
 
 async function analysePage(browser, url, searchFor) {

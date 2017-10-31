@@ -6,3 +6,4 @@ result.json
 test.log
 crawer.js
 yarn.lock
+npm-debug.log

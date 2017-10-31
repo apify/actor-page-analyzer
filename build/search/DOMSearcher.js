@@ -8,10 +8,6 @@ var _cheerio = require('cheerio');
 
 var _cheerio2 = _interopRequireDefault(_cheerio);
 
-var _util = require('util');
-
-var _util2 = _interopRequireDefault(_util);
-
 var _lodash = require('lodash');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -52,7 +48,7 @@ class DOMSearcher {
             id: $element.attr('id')
         };
         const normalizedText = elementText.toLowerCase(); // to lower case to match most results
-        const containsSearchString = this.searchFor.reduce((contains, searchString) => {
+        const containsSearchString = this.normalizedSearch.reduce((contains, searchString) => {
             if (contains) return true;
             return normalizedText.indexOf(searchString) !== -1;
         }, false);
@@ -100,11 +96,12 @@ class DOMSearcher {
 
     find(searchFor) {
         const { $, searchElement, findPath } = this;
-        if (!searchFor || !Array.isArray(searchFor) || !searchFor.length) {
-            throw new Error('DOMSearcher requires array of search strings.');
+        if (!searchFor || !(0, _lodash.isObject)(searchFor)) {
+            throw new Error('DOMSearcher requires array of search queries.');
         }
 
         this.searchFor = searchFor;
+        this.normalizedSearch = Object.keys(searchFor).map(key => searchFor[key].toLowerCase());
         this.foundPaths = [];
 
         let $body = this.$('body');

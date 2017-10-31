@@ -1,6 +1,8 @@
 {
     "url": "http://www.imdb.com/title/tt1856101/?pf_rd_m=A2FGELUUNOQJNL&pf_rd_p=2773216402&pf_rd_r=10DBXD6JX4H7D7C8FEJD&pf_rd_s=right-7&pf_rd_t=15061&pf_rd_i=homepage&ref_=hm_cht_t1",
-    "searchFor": [
-        "blade runner 2049", "8.5", "ryan gosling"
-    ]
+    "searchFor": {
+        "title": "Blade Runner 2049",
+        "rating": "8.5",
+        "actor": "Ryan Gosling"
+    }
 }
