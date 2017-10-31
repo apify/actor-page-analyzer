@@ -50,6 +50,10 @@ var _Crawler = require('./generate/Crawler');
 
 var _Crawler2 = _interopRequireDefault(_Crawler);
 
+var _Output = require('./generate/Output');
+
+var _Output2 = _interopRequireDefault(_Output);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 let nativeWindowsProperties = null;
@@ -61,6 +65,7 @@ const INPUT_TYPE = `{
 }`;
 
 async function analysePage(browser, url, searchFor) {
+    const output = new _Output2.default();
     const result = {
         url,
         // Fix order of fields
@@ -85,6 +90,7 @@ async function analysePage(browser, url, searchFor) {
 
     try {
         page = await browser.newPage();
+        await output.set('analysisStarted', true);
 
         page.on('error', err => {
             console.log(`Web page crashed (${url}): ${err}`);
@@ -178,29 +184,43 @@ async function analysePage(browser, url, searchFor) {
         // Extract list of non-native window properties
         const windowProperties = _lodash2.default.filter(evalData.allWindowProperties, propName => !nativeWindowsProperties[propName]);
 
-        console.log('Evaluating window properties');
-        // Evaluate non-native window properties
-        result.windowProperties = await page.evaluate(_windowProperties2.default, windowProperties);
-        console.log('Evaluated window properties');
         const searchResults = {};
         try {
             const $ = _cheerio2.default.load(result.html);
             const treeSearcher = new _TreeSearcher2.default();
-            result.schemaOrgData = (0, _schemaOrg2.default)({ $ });
-            searchResults.schemaOrg = treeSearcher.find(result.schemaOrgData, searchFor);
-            result.metadata = (0, _metadata2.default)({ $ });
-            searchResults.metadata = treeSearcher.find(result.metadata, searchFor);
-            result.jsonld = (0, _jsonLd2.default)({ $ });
-            searchResults.jsonLD = treeSearcher.find(result.jsonld, searchFor);
+
+            // Evaluate non-native window properties
+            result.windowProperties = await page.evaluate(_windowProperties2.default, windowProperties);
+            await output.set('windowPropertiesParsed', true);
             searchResults.window = treeSearcher.find(result.windowProperties, searchFor);
+            await output.set('windowPropertiesFound', searchResults.window);
+
+            result.schemaOrgData = (0, _schemaOrg2.default)({ $ });
+            await output.set('schemaOrgDataParsed', true);
+            searchResults.schemaOrg = treeSearcher.find(result.schemaOrgData, searchFor);
+            await output.set('schemaOrgDataFound', searchResults.schemaOrg);
+
+            result.metadata = (0, _metadata2.default)({ $ });
+            await output.set('metaDataParsed', true);
+            searchResults.metadata = treeSearcher.find(result.metadata, searchFor);
+            await output.set('metaDataFound', searchResults.metadata);
+
+            result.jsonld = (0, _jsonLd2.default)({ $ });
+            await output.set('jsonLDDataParsed', true);
+            searchResults.jsonLD = treeSearcher.find(result.jsonld, searchFor);
+            await output.set('jsonLDDataFound', searchResults.jsonLD);
+
             const domSearcher = new _DOMSearcher2.default({ $ });
             searchResults.html = domSearcher.find(searchFor);
+            await output.set('htmlParsed', true);
+            await output.set('htmlFound', searchResults.html);
         } catch (err) {
             console.error(err);
         }
         const crawlerGenerator = new _Crawler2.default();
         const crawler = crawlerGenerator.generate(searchResults, searchFor);
-        await _apify2.default.setValue('OUTPUT', crawler, { contentType: 'text/javascript' });
+        await output.set('crawler', crawler);
+        await output.set('analysisEnded', true);
     } catch (e) {
         console.log(`Loading of web page failed (${url}): ${e}`);
         console.error(e);

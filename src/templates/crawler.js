@@ -7,7 +7,6 @@ export default function crawlerTemplate({
 function pageFunction(context) {
     ${requiresJQuery ? 'var $ = context.jQuery;' : ''}
     ${requiresSchemaOrg ? `
-
     var extractValue = function(elem) {
         return $(elem).attr("content") || $(elem).text()
                || $(elem).attr("src") || $(elem).attr("href") || null;
