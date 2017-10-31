@@ -181,7 +181,6 @@ async function analysePage(browser, url, searchFor) {
 
         // Evaluate non-native window properties
         result.windowProperties = await page.evaluate(_windowProperties2.default, windowProperties);
-        console.log(result.windowProperties);
         const searchResults = {};
         try {
             const $ = _cheerio2.default.load(result.html);

@@ -13,6 +13,7 @@ function crawlerTemplate({
 function pageFunction(context) {
     ${requiresJQuery ? 'var $ = context.jQuery;' : ''}
     ${requiresSchemaOrg ? `
+
     var extractValue = function(elem) {
         return $(elem).attr("content") || $(elem).text()
                || $(elem).attr("src") || $(elem).attr("href") || null;
@@ -61,11 +62,12 @@ function pageFunction(context) {
 
     var schemaOrg = extractAllItems();
 ` : ''}
+
     var parsedData = {};
 
     ${crawlerItems.join("\n\t")}
 
     context.finish(parsedData);
-}
+    }
 `;
 }

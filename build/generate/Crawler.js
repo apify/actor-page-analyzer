@@ -92,7 +92,6 @@ class CrawlerGenerator {
     generate(searchResults, searchFor) {
         const flattenedResults = flattenResults(searchResults);
         this.results = processResults(flattenedResults, searchFor);
-        console.log(this.results);
         const data = {
             requiresJQuery: false,
             requiresSchemaOrg: false,
