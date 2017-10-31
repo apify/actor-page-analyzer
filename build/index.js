@@ -181,6 +181,7 @@ async function analysePage(browser, url, searchFor) {
 
         // Evaluate non-native window properties
         result.windowProperties = await page.evaluate(_windowProperties2.default, windowProperties);
+        console.log(result.windowProperties);
         const searchResults = {};
         try {
             const $ = _cheerio2.default.load(result.html);
@@ -200,7 +201,6 @@ async function analysePage(browser, url, searchFor) {
         const crawlerGenerator = new _Crawler2.default();
         const crawler = crawlerGenerator.generate(searchResults, searchFor);
         await _apify2.default.setValue('OUTPUT', crawler, { contentType: 'text/javascript' });
-        console.log(crawler);
     } catch (e) {
         console.log(`Loading of web page failed (${url}): ${e}`);
         console.error(e);

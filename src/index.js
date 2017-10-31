@@ -161,7 +161,6 @@ async function analysePage(browser, url, searchFor) {
         const crawlerGenerator = new CrawlerGenerator();
         const crawler = crawlerGenerator.generate(searchResults, searchFor);
         await Apify.setValue('OUTPUT', crawler, { contentType: 'text/javascript' });
-        console.log(crawler);
     } catch (e) {
         console.log(`Loading of web page failed (${url}): ${e}`);
         console.error(e);

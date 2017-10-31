@@ -111,7 +111,7 @@ export default class CrawlerGenerator {
                 data.crawlerItems.push(jsonLDCrawlerTemplate(searchString, bestOption.path));
                 break;
             case 'window':
-                data.crawlerItems.push(`parsedData['${searchString}'] = window.${bestOption.path};`);
+                data.crawlerItems.push(`parsedData['${searchString}'] = window${bestOption.path};`);
                 break;
             case 'html':
                 data.requiresJQuery = true;

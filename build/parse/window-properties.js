@@ -42,7 +42,7 @@ function evalWindowProperties(properties) {
                         }
                         if (typeof value === 'object' && value !== null) {
                             if (cache.indexOf(value) !== -1) {
-                                return null;
+                                return Object.assign({}, value);
                             }
                             cache.push(value);
                         }
@@ -54,5 +54,6 @@ function evalWindowProperties(properties) {
         }
     });
     cache = null;
+    console.log(Object.keys(result));
     return result;
 }
