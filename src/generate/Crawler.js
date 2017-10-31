@@ -115,7 +115,7 @@ export default class CrawlerGenerator {
                 break;
             case 'html':
                 data.requiresJQuery = true;
-                data.crawlerItems.push(`parsedData['${searchString}'] = $(${bestOption.selector}).text();`);
+                data.crawlerItems.push(`parsedData['${searchString}'] = $('${bestOption.selector}').text();`);
                 break;
             // no default
             }

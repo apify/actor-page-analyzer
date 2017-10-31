@@ -61,7 +61,7 @@ function pageFunction(context) {
 
     var schemaOrg = extractAllItems();
 ` : ''}
-    var parsedData = {}
+    var parsedData = {};
 
     ${crawlerItems.join("\n\t")}
 
