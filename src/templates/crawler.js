@@ -57,11 +57,17 @@ function pageFunction(context) {
     var schemaOrg = extractAllItems();
 ` : ''}
 
-    var parsedData = {};
+    context.willFinishLater();
 
-    ${crawlerItems.join("\n\t")}
+    function extractData() {
+        var parsedData = {};
 
-    context.finish(parsedData);
+        ${crawlerItems.join("\n\t")}
+
+        context.finish(parsedData);
     }
+
+    window.setTimeout(extractData, 1000);
+}
 `;
 }

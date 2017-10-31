@@ -168,7 +168,6 @@ async function analysePage(browser, url, searchFor) {
 
         const evalData = await page.evaluate(() => ({
             html: document.documentElement.innerHTML, // eslint-disable-line
-            text: document.documentElement.innerText, // eslint-disable-line
             iframeCount: document.querySelectorAll('iframe').length, // eslint-disable-line
             scriptCount: document.querySelectorAll('script').length, // eslint-disable-line
             allWindowProperties: Object.keys(window) // eslint-disable-line
@@ -179,8 +178,10 @@ async function analysePage(browser, url, searchFor) {
         // Extract list of non-native window properties
         const windowProperties = _lodash2.default.filter(evalData.allWindowProperties, propName => !nativeWindowsProperties[propName]);
 
+        console.log('Evaluating window properties');
         // Evaluate non-native window properties
         result.windowProperties = await page.evaluate(_windowProperties2.default, windowProperties);
+        console.log('Evaluated window properties');
         const searchResults = {};
         try {
             const $ = _cheerio2.default.load(result.html);

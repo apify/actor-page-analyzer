@@ -26,7 +26,7 @@ const getNativeWindowProperties = exports.getNativeWindowProperties = async page
 function evalWindowProperties(properties) {
     const result = {};
     let cache = [];
-    properties.forEach(property => {
+    properties.filter(prop => prop !== 'frames').forEach(property => {
         const propertyContent = window[property]; // eslint-disable-line
         switch (typeof propertyContent) {
             // Skip functions, used switch for future improvements
@@ -42,7 +42,7 @@ function evalWindowProperties(properties) {
                         }
                         if (typeof value === 'object' && value !== null) {
                             if (cache.indexOf(value) !== -1) {
-                                return Object.assign({}, value);
+                                return null;
                             }
                             cache.push(value);
                         }
