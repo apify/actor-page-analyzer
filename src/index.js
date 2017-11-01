@@ -156,6 +156,10 @@ async function analysePage(browser, url, searchFor) {
                     searchResults.window,
                 ),
             );
+            await output.set(
+                'allWindowProperties',
+                result.windowProperties,
+            );
 
             result.schemaOrgData = parseSchemaOrgData({ $ });
             await output.set('schemaOrgDataParsed', true);
