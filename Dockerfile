@@ -12,7 +12,5 @@ COPY . ./
 RUN npm install --quiet --only=prod \
  && npm list
 
-RUN npm run build
-
 # Define that start command
 CMD [ "node", "build/index.js" ]
