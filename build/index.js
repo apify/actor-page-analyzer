@@ -56,8 +56,6 @@ var _Output2 = _interopRequireDefault(_Output);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-let nativeWindowsProperties = null;
-
 // Definition of the input
 const INPUT_TYPE = `{
     url: String,
@@ -97,14 +95,7 @@ async function analysePage(browser, url, searchFor) {
             page.close().catch(err2 => console.log(`Error closing page 1 (${url}): ${err2}`));
         });
 
-        // On first run, get list of native window properties from the browser
-        if (!nativeWindowsProperties) {
-            const properties = (0, _windowProperties.getNativeWindowProperties)(page);
-            // Other concurrent worker might have done the same in the meantime
-            if (!nativeWindowsProperties) {
-                nativeWindowsProperties = properties;
-            }
-        }
+        const nativeWindowsProperties = await (0, _windowProperties.getNativeWindowProperties)(page);
 
         // Key is requestId, value is record in result.requests
         const requestIdToRecord = {};
@@ -179,7 +170,7 @@ async function analysePage(browser, url, searchFor) {
             allWindowProperties: Object.keys(window) // eslint-disable-line
         }));
 
-        Object.assign(result, _lodash2.default.pick(evalData, 'html', 'text', 'iframeCount', 'scriptCount', 'modernizr', 'html5'));
+        Object.assign(result, _lodash2.default.pick(evalData, 'html', 'iframeCount', 'scriptCount', 'allWindowProperties'));
 
         // Extract list of non-native window properties
         const windowProperties = _lodash2.default.filter(evalData.allWindowProperties, propName => !nativeWindowsProperties[propName]);
@@ -192,9 +183,9 @@ async function analysePage(browser, url, searchFor) {
             // Evaluate non-native window properties
             result.windowProperties = await page.evaluate(_windowProperties2.default, windowProperties);
             await output.set('windowPropertiesParsed', true);
-            await output.set('windowProperties', result.windowProperties);
             searchResults.window = treeSearcher.find(result.windowProperties, searchFor);
             await output.set('windowPropertiesFound', searchResults.window);
+            await output.set('windowProperties', (0, _windowProperties.cleanWindowProperties)(result.windowProperties, searchResults.window));
 
             result.schemaOrgData = (0, _schemaOrg2.default)({ $ });
             await output.set('schemaOrgDataParsed', true);
@@ -204,7 +195,7 @@ async function analysePage(browser, url, searchFor) {
 
             result.metadata = (0, _metadata2.default)({ $ });
             await output.set('metaDataParsed', true);
-            await output.set('metadata', result.metadata);
+            await output.set('metaData', result.metadata);
             searchResults.metadata = treeSearcher.find(result.metadata, searchFor);
             await output.set('metaDataFound', searchResults.metadata);
 

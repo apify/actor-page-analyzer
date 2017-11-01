@@ -4,7 +4,10 @@ import cheerio from 'cheerio';
 import Apify from 'apify';
 import { typeCheck } from 'type-check';
 
-import evalWindowProperties, { getNativeWindowProperties } from './parse/window-properties';
+import evalWindowProperties, {
+    getNativeWindowProperties,
+    cleanWindowProperties,
+} from './parse/window-properties';
 import parseResponse from './parse/xhr-requests';
 import parseMetadata from './parse/metadata';
 import parseSchemaOrgData from './parse/schema-org';
@@ -13,8 +16,6 @@ import DOMSearcher from './search/DOMSearcher';
 import TreeSearcher from './search/TreeSearcher';
 import CrawlerGenerator from './generate/Crawler';
 import OutputGenerator from './generate/Output';
-
-let nativeWindowsProperties = null;
 
 // Definition of the input
 const INPUT_TYPE = `{
@@ -55,14 +56,7 @@ async function analysePage(browser, url, searchFor) {
             page.close().catch((err2) => console.log(`Error closing page 1 (${url}): ${err2}`));
         });
 
-        // On first run, get list of native window properties from the browser
-        if (!nativeWindowsProperties) {
-            const properties = getNativeWindowProperties(page);
-            // Other concurrent worker might have done the same in the meantime
-            if (!nativeWindowsProperties) {
-                nativeWindowsProperties = properties;
-            }
-        }
+        const nativeWindowsProperties = await getNativeWindowProperties(page);
 
         // Key is requestId, value is record in result.requests
         const requestIdToRecord = {};
@@ -137,10 +131,13 @@ async function analysePage(browser, url, searchFor) {
             allWindowProperties: Object.keys(window), // eslint-disable-line
         }));
 
-        Object.assign(result, _.pick(evalData, 'html', 'text', 'iframeCount', 'scriptCount', 'modernizr', 'html5'));
+        Object.assign(result, _.pick(evalData, 'html', 'iframeCount', 'scriptCount', 'allWindowProperties'));
 
         // Extract list of non-native window properties
-        const windowProperties = _.filter(evalData.allWindowProperties, (propName) => !nativeWindowsProperties[propName]);
+        const windowProperties = _.filter(
+            evalData.allWindowProperties,
+            (propName) => !nativeWindowsProperties[propName],
+        );
 
         const searchResults = {};
         try {
@@ -150,9 +147,15 @@ async function analysePage(browser, url, searchFor) {
             // Evaluate non-native window properties
             result.windowProperties = await page.evaluate(evalWindowProperties, windowProperties);
             await output.set('windowPropertiesParsed', true);
-            await output.set('windowProperties', result.windowProperties);
             searchResults.window = treeSearcher.find(result.windowProperties, searchFor);
             await output.set('windowPropertiesFound', searchResults.window);
+            await output.set(
+                'windowProperties',
+                cleanWindowProperties(
+                    result.windowProperties,
+                    searchResults.window,
+                ),
+            );
 
             result.schemaOrgData = parseSchemaOrgData({ $ });
             await output.set('schemaOrgDataParsed', true);
@@ -162,7 +165,7 @@ async function analysePage(browser, url, searchFor) {
 
             result.metadata = parseMetadata({ $ });
             await output.set('metaDataParsed', true);
-            await output.set('metadata', result.metadata);
+            await output.set('metaData', result.metadata);
             searchResults.metadata = treeSearcher.find(result.metadata, searchFor);
             await output.set('metaDataFound', searchResults.metadata);
 
