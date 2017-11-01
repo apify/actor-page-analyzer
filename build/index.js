@@ -186,6 +186,7 @@ async function analysePage(browser, url, searchFor) {
             searchResults.window = treeSearcher.find(result.windowProperties, searchFor);
             await output.set('windowPropertiesFound', searchResults.window);
             await output.set('windowProperties', (0, _windowProperties.cleanWindowProperties)(result.windowProperties, searchResults.window));
+            await output.set('allWindowProperties', result.windowProperties);
 
             result.schemaOrgData = (0, _schemaOrg2.default)({ $ });
             await output.set('schemaOrgDataParsed', true);

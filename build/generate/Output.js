@@ -17,6 +17,7 @@ class OutputGenerator {
             windowPropertiesParsed: false,
             windowProperties: {},
             windowPropertiesFound: [],
+            allWindowProperties: {},
             schemaOrgDataParsed: false,
             schemaOrgData: {},
             schemaOrgDataFound: [],
