@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var _lodash = require('lodash');
 
+var _utils = require('../utils');
+
 class TreeSearcher {
     constructor() {
         this.findInTree = this.findInTree.bind(this);
@@ -19,7 +21,7 @@ class TreeSearcher {
             if (item.toString) {
                 item = item.toString();
             }
-            const normalizedText = item.toLowerCase ? item.toLowerCase() : item;
+            const normalizedText = (0, _utils.normalize)(item);
             const foundString = normalizedSearch.reduce((found, searchedString) => {
                 if (found) return true;
                 return normalizedText.indexOf(searchedString) !== -1;
@@ -44,9 +46,8 @@ class TreeSearcher {
     find(data, searchFor, path = '') {
         this.foundPaths = [];
         this.searchFor = searchFor;
-        this.normalizedSearch = Object.keys(searchFor).map(key => searchFor[key].toLowerCase());
+        this.normalizedSearch = Object.keys(searchFor).map(key => (0, _utils.normalize)(searchFor[key]));
         this.findInTree(data, path);
-        // console.log(util.inspect(this.foundPaths, { showHidden: false, depth: null }));
         return this.foundPaths;
     }
 }

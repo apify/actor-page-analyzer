@@ -1,4 +1,8 @@
 import request from 'request';
+import { AllHtmlEntities } from 'html-entities';
+import { isString } from 'lodash';
+
+const entities = new AllHtmlEntities();
 
 export const requestPromised = async (opts) => (
     new Promise((resolve, reject) => (
@@ -11,13 +15,19 @@ export const requestPromised = async (opts) => (
     ))
 );
 
-export const concatArrays = (...args) => args.reduce(
-    (acc, val) => [
-        ...acc,
-        ...val,
-    ],
-    [],
-);
+export const removeHTMLTags = (text) => text.replace(/<[^>]*>?/g, '');
+export const replaceHTMLEntities = (text) => entities.decode(text);
+export const removeSpaces = (text) => text.replace(/\s/g, '');
+export const convertCommasInNumbers = (text) => text.replace(/(\d+),(\d+)/g, '$1.$2');
+
+export const normalize = (text) => {
+    if (!isString(text)) return text;
+    let normalized = removeHTMLTags(text);
+    normalized = replaceHTMLEntities(normalized);
+    normalized = removeSpaces(normalized);
+    normalized = convertCommasInNumbers(normalized);
+    return normalized;
+};
 
 export const cleanData = (data) => {
     let cache = [];

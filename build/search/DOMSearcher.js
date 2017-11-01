@@ -10,6 +10,8 @@ var _cheerio2 = _interopRequireDefault(_cheerio);
 
 var _lodash = require('lodash');
 
+var _utils = require('../utils');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function createSelector(path, item) {
@@ -47,7 +49,7 @@ class DOMSearcher {
             class: $element.attr('class'),
             id: $element.attr('id')
         };
-        const normalizedText = elementText.toLowerCase(); // to lower case to match most results
+        const normalizedText = (0, _utils.normalize)(elementText); // to lower case to match most results
         const containsSearchString = this.normalizedSearch.reduce((contains, searchString) => {
             if (contains) return true;
             return normalizedText.indexOf(searchString) !== -1;
@@ -101,7 +103,7 @@ class DOMSearcher {
         }
 
         this.searchFor = searchFor;
-        this.normalizedSearch = Object.keys(searchFor).map(key => searchFor[key].toLowerCase());
+        this.normalizedSearch = Object.keys(searchFor).map(key => (0, _utils.normalize)(searchFor[key]));
         this.foundPaths = [];
 
         let $body = this.$('body');

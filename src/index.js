@@ -150,21 +150,25 @@ async function analysePage(browser, url, searchFor) {
             // Evaluate non-native window properties
             result.windowProperties = await page.evaluate(evalWindowProperties, windowProperties);
             await output.set('windowPropertiesParsed', true);
+            await output.set('windowProperties', result.windowProperties);
             searchResults.window = treeSearcher.find(result.windowProperties, searchFor);
             await output.set('windowPropertiesFound', searchResults.window);
 
             result.schemaOrgData = parseSchemaOrgData({ $ });
             await output.set('schemaOrgDataParsed', true);
+            await output.set('schemaOrgData', result.schemaOrgData);
             searchResults.schemaOrg = treeSearcher.find(result.schemaOrgData, searchFor);
             await output.set('schemaOrgDataFound', searchResults.schemaOrg);
 
             result.metadata = parseMetadata({ $ });
             await output.set('metaDataParsed', true);
+            await output.set('metadata', result.metadata);
             searchResults.metadata = treeSearcher.find(result.metadata, searchFor);
             await output.set('metaDataFound', searchResults.metadata);
 
             result.jsonld = parseJsonLD({ $ });
             await output.set('jsonLDDataParsed', true);
+            await output.set('jsonLDData', result.jsonld);
             searchResults.jsonLD = treeSearcher.find(result.jsonld, searchFor);
             await output.set('jsonLDDataFound', searchResults.jsonLD);
 

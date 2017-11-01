@@ -1,4 +1,5 @@
 import { isArray, isObject } from 'lodash';
+import { normalize } from '../utils';
 
 export default class TreeSearcher {
     constructor() {
@@ -13,7 +14,7 @@ export default class TreeSearcher {
             if (item.toString) {
                 item = item.toString();
             }
-            const normalizedText = item.toLowerCase ? item.toLowerCase() : item;
+            const normalizedText = normalize(item);
             const foundString = normalizedSearch.reduce((found, searchedString) => {
                 if (found) return true;
                 return normalizedText.indexOf(searchedString) !== -1;
@@ -38,9 +39,8 @@ export default class TreeSearcher {
     find(data, searchFor, path = '') {
         this.foundPaths = [];
         this.searchFor = searchFor;
-        this.normalizedSearch = Object.keys(searchFor).map(key => searchFor[key].toLowerCase());
+        this.normalizedSearch = Object.keys(searchFor).map(key => normalize(searchFor[key]));
         this.findInTree(data, path);
-        // console.log(util.inspect(this.foundPaths, { showHidden: false, depth: null }));
         return this.foundPaths;
     }
 }
