@@ -58,8 +58,6 @@ class DOMSearcher {
             return normalizedText.indexOf(searchString) !== -1;
         }, false);
 
-        console.log(normalizedText, containsSearchString);
-
         if (!containsSearchString) return elementData;
 
         const childElements = $element.children();

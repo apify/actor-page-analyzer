@@ -82,6 +82,5 @@ export default function evalWindowProperties(properties) {
             }
         });
     cache = null;
-    console.log(Object.keys(result));
     return result;
 }
