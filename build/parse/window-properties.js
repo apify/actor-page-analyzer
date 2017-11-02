@@ -24,22 +24,20 @@ const getNativeWindowProperties = exports.getNativeWindowProperties = async page
 };
 
 function cleanWindowProperties(properties, found) {
-    /* EXAMPLE of found
-    [{
-        "path": ".dataLayer[0].itemName",
-        "value": "Samsung Galaxy A3 (2017) modrý"
-    }, {
-        "path": ".dataLayer[0].itemPrice",
-        "value": "6999"
-    }],
-    */
     const importantProperties = [];
     found.forEach(({ path }) => {
         const cleanPath = path.substr(1);
-        const endOfPropertyName = Math.min(cleanPath.indexOf('['), cleanPath.indexOf('.'));
+
+        let indexOfBracket = cleanPath.indexOf('[');
+        if (indexOfBracket === -1) indexOfBracket = Number.MAX_SAFE_INTEGER;
+        let indexOfDot = cleanPath.indexOf('.');
+        if (indexOfDot === -1) indexOfDot = Number.MAX_SAFE_INTEGER;
+        const endOfPropertyName = Math.min(indexOfBracket, indexOfDot);
+
         const property = cleanPath.substr(0, endOfPropertyName);
         if (importantProperties.indexOf(property) === -1) importantProperties.push(property);
     });
+
     const cleanedUpProperties = {};
     Object.keys(properties).filter(property => importantProperties.indexOf(property) !== -1).forEach(property => {
         cleanedUpProperties[property] = properties[property];
@@ -52,15 +50,16 @@ function evalWindowProperties(properties) {
     const result = {};
     let cache = [];
 
-    function isEmpty(property) {
-        return property === null || property === '' || property === {} || property === [];
+    function isNotImportant(property) {
+        return property === null || property === '' || property === {} || property === [] || property === true || property === false;
     }
 
     properties.forEach(property => {
         const propertyContent = window[property]; // eslint-disable-line
-        if (isEmpty(propertyContent)) {
+        if (isNotImportant(propertyContent)) {
             return;
         }
+        if (propertyContent && !!propertyContent.document && !!propertyContent.location) return;
         switch (typeof propertyContent) {
             // Skip functions, used switch for future improvements
             case 'function':
@@ -69,7 +68,7 @@ function evalWindowProperties(properties) {
                 try {
                     // remove circular references and functions from variable content
                     result[property] = JSON.parse(JSON.stringify(propertyContent, (key, value) => {
-                        if (isEmpty(value)) return undefined;
+                        if (isNotImportant(value)) return undefined;
                         if (typeof value === 'function') {
                             return undefined;
                         }

@@ -13,7 +13,9 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 class OutputGenerator {
     constructor() {
         this.fields = {
-            analysisStarted: false,
+            analysisStarted: null,
+            pageNavigated: null,
+            initialResponse: null,
             windowPropertiesParsed: false,
             windowProperties: {},
             windowPropertiesFound: [],
@@ -27,10 +29,18 @@ class OutputGenerator {
             jsonLDDataParsed: false,
             jsonLDData: {},
             jsonLDDataFound: [],
+            html: '',
             htmlParsed: false,
             htmlFound: [],
+            xhrRequestsParsed: false,
+            xhrRequests: [],
+            xhrRequestsFound: [],
             crawler: '',
-            analysisEnded: false
+            scrappingFinished: null,
+            analysisEnded: null,
+            screenshot: '',
+            error: null,
+            pageError: null
         };
     }
 
@@ -39,6 +49,7 @@ class OutputGenerator {
         try {
             await _apify2.default.setValue('OUTPUT', JSON.stringify(this.fields), { contentType: 'application/json' });
         } catch (error) {
+            console.log('output error');
             console.error(error);
         }
     }

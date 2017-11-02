@@ -3,7 +3,9 @@ import Apify from 'apify';
 export default class OutputGenerator {
     constructor() {
         this.fields = {
-            analysisStarted: false,
+            analysisStarted: null,
+            pageNavigated: null,
+            initialResponse: null,
             windowPropertiesParsed: false,
             windowProperties: {},
             windowPropertiesFound: [],
@@ -17,10 +19,18 @@ export default class OutputGenerator {
             jsonLDDataParsed: false,
             jsonLDData: {},
             jsonLDDataFound: [],
+            html: '',
             htmlParsed: false,
             htmlFound: [],
+            xhrRequestsParsed: false,
+            xhrRequests: [],
+            xhrRequestsFound: [],
             crawler: '',
-            analysisEnded: false,
+            scrappingFinished: null,
+            analysisEnded: null,
+            screenshot: '',
+            error: null,
+            pageError: null,
         };
     }
 
@@ -29,6 +39,7 @@ export default class OutputGenerator {
         try {
             await Apify.setValue('OUTPUT', JSON.stringify(this.fields), { contentType: 'application/json' });
         } catch (error) {
+            console.log('output error');
             console.error(error);
         }
     }

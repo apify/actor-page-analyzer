@@ -1,14 +1,11 @@
 import puppeteer from 'puppeteer';
-import _ from 'lodash';
 import cheerio from 'cheerio';
 import Apify from 'apify';
 import { typeCheck } from 'type-check';
+import { isString } from 'lodash';
 
-import evalWindowProperties, {
-    getNativeWindowProperties,
-    cleanWindowProperties,
-} from './parse/window-properties';
-import parseResponse from './parse/xhr-requests';
+import PageScrapper from './scrap/page';
+import { cleanWindowProperties } from './parse/window-properties';
 import parseMetadata from './parse/metadata';
 import parseSchemaOrgData from './parse/schema-org';
 import parseJsonLD from './parse/json-ld';
@@ -25,178 +22,153 @@ const INPUT_TYPE = `{
 
 async function analysePage(browser, url, searchFor) {
     const output = new OutputGenerator();
-    const result = {
-        url,
-        // Fix order of fields
-        errorInfo: null,
-        loadedUrl: null,
-        requestedAt: null,
-        loadedAt: null,
-        analysedAt: null,
-        responseStatus: null,
-        responseHeaders: null,
-        responseTotalBytes: 0,
-        iframeCount: null,
-        scriptCount: null,
-        windowProperties: null,
-        requests: [],
-        html: null,
-        text: null,
-        screenshotPngBase64: null,
-    };
 
-    let page = null;
+    const scrappedData = {
+        windowProperties: {},
+        html: '<body></body>',
+    };
+    const scrapper = new PageScrapper(browser);
+
+    scrapper.on('started', (data) => {
+        console.log('scrapping started');
+        scrappedData.loadingStarted = data;
+        output.set('analysisStarted', data.timestamp);
+    });
+
+    scrapper.on('loaded', (data) => {
+        console.log('loaded');
+        scrappedData.loadingFinished = data;
+        output.set('pageNavigated', data.timestamp);
+    });
+
+    scrapper.on('initial-response', (response) => {
+        console.log('initial response');
+        output.set('initialResponse', response);
+    });
+
+    scrapper.on('html', (html) => {
+        console.log('html');
+        scrappedData.html = html;
+        output.set('htmlParsed', true);
+        output.set('html', html);
+    });
+
+    scrapper.on('window-properties', (properties) => {
+        console.log('window properties');
+        scrappedData.windowProperties = properties;
+        output.set('windowPropertiesParsed', true);
+        output.set('allWindowProperties', properties);
+    });
+
+    scrapper.on('screenshot', (data) => {
+        console.log('screenshot');
+        output.set('screenshot', data);
+    });
+
+    scrapper.on('requests', (requests) => {
+        console.log('requests');
+        scrappedData.xhrRequests = requests;
+        output.set('xhrRequestsParsed', true);
+        output.set('xhrRequests', requests);
+    });
+
+    scrapper.on('done', (data) => {
+        console.log('scrapping finished');
+        output.set('scrappingFinished', data.timestamp);
+    });
+
+    scrapper.on('page-error', (data) => {
+        console.log('page error');
+        scrappedData.pageError = data;
+        output.set('pageError', data);
+    });
+
+    scrapper.on('error', (data) => {
+        console.log('error');
+        scrappedData.pageError = data;
+        output.set('error', data);
+    });
 
     try {
-        page = await browser.newPage();
-        await output.set('analysisStarted', true);
+        await scrapper.start(url);
 
-        page.on('error', (err) => {
-            console.log(`Web page crashed (${url}): ${err}`);
-            page.close().catch((err2) => console.log(`Error closing page 1 (${url}): ${err2}`));
-        });
-
-        const nativeWindowsProperties = await getNativeWindowProperties(page);
-
-        // Key is requestId, value is record in result.requests
-        const requestIdToRecord = {};
-
-        // ID of the main page request
-        let initialRequestId = null;
-
-        const getOrCreateRequestRecord = (requestId) => {
-            let rec = requestIdToRecord[requestId];
-            if (!rec) {
-                rec = {
-                    url: null,
-                    method: null,
-                    responseStatus: null,
-                    responseHeaders: null,
-                    responseBytes: 0,
-                };
-                requestIdToRecord[requestId] = rec;
-                result.requests.push(rec);
-            }
-            return rec;
-        };
-
-        page.on('request', (request) => {
-            if (!initialRequestId) {
-                initialRequestId = request._requestId;
-            }
-            const rec = getOrCreateRequestRecord(request._requestId);
-            rec.url = request.url;
-            rec.method = request.method;
-        });
-
-        // WORKAROUND: Puppeteer's Network.loadingFinished handler doesn't store encodedDataLength field
-        page._networkManager._client.on('Network.dataReceived', (params) => {
-            const rec = getOrCreateRequestRecord(params.requestId);
-            if (rec) {
-                rec.responseBytes += params.encodedDataLength || 0;
-            }
-            result.responseTotalBytes += params.encodedDataLength || 0;
-        });
-
-        page.on('response', async (response) => {
-            const request = response.request();
-            const rec = getOrCreateRequestRecord(request._requestId);
-            if (rec) {
-                const data = await parseResponse(response);
-                rec.responseStatus = data.status;
-                rec.responseHeaders = data.headers;
-                rec.responseBody = data.body;
-            }
-        });
-
-        console.log(`Loading page: ${url}`);
-        result.requestedAt = new Date();
-        await page.goto(url);
-
-        console.log(`Page loaded: ${url}`);
-
-        const rec = requestIdToRecord[initialRequestId];
-        if (rec) {
-            result.responseStatus = rec.responseStatus;
-            result.responseHeaders = rec.responseHeaders;
-        }
-
-        result.loadedAt = new Date();
-        result.loadedUrl = await page.url();
-
-        const evalData = await page.evaluate(() => ({
-            html: document.documentElement.innerHTML, // eslint-disable-line
-            iframeCount: document.querySelectorAll('iframe').length, // eslint-disable-line
-            scriptCount: document.querySelectorAll('script').length, // eslint-disable-line
-            allWindowProperties: Object.keys(window), // eslint-disable-line
-        }));
-
-        Object.assign(result, _.pick(evalData, 'html', 'iframeCount', 'scriptCount', 'allWindowProperties'));
-
-        // Extract list of non-native window properties
-        const windowProperties = _.filter(
-            evalData.allWindowProperties,
-            (propName) => !nativeWindowsProperties[propName],
-        );
-
+        console.log('search started');
         const searchResults = {};
         try {
-            const $ = cheerio.load(result.html);
+            const $ = cheerio.load(scrappedData.html || '<body></body>');
             const treeSearcher = new TreeSearcher();
 
             // Evaluate non-native window properties
-            result.windowProperties = await page.evaluate(evalWindowProperties, windowProperties);
-            await output.set('windowPropertiesParsed', true);
-            searchResults.window = treeSearcher.find(result.windowProperties, searchFor);
+            searchResults.window = treeSearcher.find(scrappedData.windowProperties, searchFor);
             await output.set('windowPropertiesFound', searchResults.window);
             await output.set(
                 'windowProperties',
                 cleanWindowProperties(
-                    result.windowProperties,
+                    scrappedData.windowProperties,
                     searchResults.window,
                 ),
             );
-            await output.set(
-                'allWindowProperties',
-                result.windowProperties,
-            );
+            console.log('window properties searched');
 
-            result.schemaOrgData = parseSchemaOrgData({ $ });
+            const schemaOrgData = parseSchemaOrgData({ $ });
             await output.set('schemaOrgDataParsed', true);
-            await output.set('schemaOrgData', result.schemaOrgData);
-            searchResults.schemaOrg = treeSearcher.find(result.schemaOrgData, searchFor);
+            await output.set('schemaOrgData', schemaOrgData);
+            searchResults.schemaOrg = treeSearcher.find(schemaOrgData, searchFor);
             await output.set('schemaOrgDataFound', searchResults.schemaOrg);
+            console.log('schema org searched');
 
-            result.metadata = parseMetadata({ $ });
+            const metadata = parseMetadata({ $ });
             await output.set('metaDataParsed', true);
-            await output.set('metaData', result.metadata);
-            searchResults.metadata = treeSearcher.find(result.metadata, searchFor);
+            await output.set('metaData', metadata);
+            searchResults.metadata = treeSearcher.find(metadata, searchFor);
             await output.set('metaDataFound', searchResults.metadata);
+            console.log('metadata searched');
 
-            result.jsonld = parseJsonLD({ $ });
+            const jsonld = parseJsonLD({ $ });
             await output.set('jsonLDDataParsed', true);
-            await output.set('jsonLDData', result.jsonld);
-            searchResults.jsonLD = treeSearcher.find(result.jsonld, searchFor);
+            await output.set('jsonLDData', jsonld);
+            searchResults.jsonLD = treeSearcher.find(jsonld, searchFor);
             await output.set('jsonLDDataFound', searchResults.jsonLD);
+            console.log('json-ld searched');
 
             const domSearcher = new DOMSearcher({ $ });
             searchResults.html = domSearcher.find(searchFor);
-            await output.set('htmlParsed', true);
             await output.set('htmlFound', searchResults.html);
+            console.log('html searched');
+
+            const xhrRequestResults = [];
+            scrappedData.xhrRequests.forEach(request => {
+                let results;
+                if (isString(request.responseBody)) {
+                    const searcher = new DOMSearcher({ html: request.responseBody });
+                    results = searcher.find(searchFor);
+                } else {
+                    results = treeSearcher.find(request.responseBody, searchFor);
+                }
+                if (results.length > 0) {
+                    xhrRequestResults.push({
+                        request,
+                        results,
+                    });
+                }
+            });
+            await output.set('xhrRequestsFound', xhrRequestResults);
+            console.log('xhrRequests searched');
         } catch (err) {
             console.error(err);
         }
         const crawlerGenerator = new CrawlerGenerator();
         const crawler = crawlerGenerator.generate(searchResults, searchFor);
         await output.set('crawler', crawler);
-        await output.set('analysisEnded', true);
-    } catch (e) {
-        console.log(`Loading of web page failed (${url}): ${e}`);
-        console.error(e);
-        result.errorInfo = e.stack || e.message || String(e);
-    } finally {
-        if (page) {
-            page.close().catch((e) => console.log(`Error closing page 2 (${url}): ${e}`));
+        console.log('crawler generated');
+        await output.set('analysisEnded', new Date());
+        console.log('done');
+    } catch (error) {
+        console.error(error);
+        try {
+            await output.set('error', error);
+        } catch (outputErr) {
+            console.error(outputErr);
         }
     }
 }

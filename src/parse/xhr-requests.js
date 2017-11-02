@@ -1,5 +1,5 @@
 const VALUABLE_CONTENT_TYPES = [
-    /* 'text/html', */
+    'text/html',
     'application/json',
     'application/ld+json',
 ];
@@ -38,11 +38,14 @@ export default async function parseResponse(response) {
     const valueableType = VALUABLE_CONTENT_TYPES.filter(ct => (contentType && contentType.indexOf(ct) !== -1));
     // ignore body if it's not important
     if (!valueableType.length) {
+        result.ignore = true;
         return result;
     }
 
+    result.ignore = false;
+
     try {
-        if (contentType === 'application/json') {
+        if (contentType.indexOf('json') !== -1 || contentType.indexOf('json') !== -1) {
             result.body = await parseJSONResponse(response);
         } else {
             result.body = await response.text();

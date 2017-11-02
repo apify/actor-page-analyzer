@@ -31,6 +31,9 @@ export default class DOMSearcher {
         this.searchElement = this.searchElement.bind(this);
         this.findPath = this.findPath.bind(this);
     }
+    setHTML(html) {
+        this.$ = cheerio.load(html);
+    }
     searchElement(tagName, $element) {
         const { searchElement, $ } = this;
 
@@ -102,8 +105,9 @@ export default class DOMSearcher {
         this.normalizedSearch = Object.keys(searchFor).map(key => normalize(searchFor[key]));
         this.foundPaths = [];
 
-        let $body = this.$('body');
-        if (!$body.length) $body = $.root().children();
+        let $body = $('body');
+        if (!$body.length) $body = $.root();
+        $body = $body.children();
         $body
             .map(function () {
                 return searchElement(this.tagName, $(this));

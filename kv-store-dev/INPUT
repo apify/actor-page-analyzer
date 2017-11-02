@@ -1,6 +1,8 @@
 {
     "url": "https://www.apify.com/",
     "searchFor": {
-        "intercomAppId": "kod1r788"
+        "intercom": "kod1r788",
+        "cdn": "cdn.apify.com",
+        "tweet": "We’re hiring"
     }
 }

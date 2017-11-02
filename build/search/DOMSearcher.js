@@ -40,6 +40,9 @@ class DOMSearcher {
         this.searchElement = this.searchElement.bind(this);
         this.findPath = this.findPath.bind(this);
     }
+    setHTML(html) {
+        this.$ = _cheerio2.default.load(html);
+    }
     searchElement(tagName, $element) {
         const { searchElement, $ } = this;
 
@@ -54,6 +57,8 @@ class DOMSearcher {
             if (contains) return true;
             return normalizedText.indexOf(searchString) !== -1;
         }, false);
+
+        console.log(normalizedText, containsSearchString);
 
         if (!containsSearchString) return elementData;
 
@@ -106,8 +111,9 @@ class DOMSearcher {
         this.normalizedSearch = Object.keys(searchFor).map(key => (0, _utils.normalize)(searchFor[key]));
         this.foundPaths = [];
 
-        let $body = this.$('body');
-        if (!$body.length) $body = $.root().children();
+        let $body = $('body');
+        if (!$body.length) $body = $.root();
+        $body = $body.children();
         $body.map(function () {
             return searchElement(this.tagName, $(this));
         }).get().filter(child => child.text || child.children).forEach((child, index) => findPath([], index, child));
