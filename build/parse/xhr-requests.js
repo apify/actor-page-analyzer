@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-const VALUABLE_CONTENT_TYPES = ['text/html', 'application/json', 'application/ld+json'];
+const VALUABLE_CONTENT_TYPES = ['html', 'json'];
 
 // attempt to parse JSON response, save error if parsing fails
 async function parseJSONResponse(response) {
@@ -46,7 +46,7 @@ exports.default = async function parseResponse(response) {
     result.ignore = false;
 
     try {
-        if (contentType.indexOf('json') !== -1 || contentType.indexOf('json') !== -1) {
+        if (contentType.indexOf('json') !== -1) {
             result.body = await parseJSONResponse(response);
         } else {
             result.body = await response.text();
@@ -54,6 +54,7 @@ exports.default = async function parseResponse(response) {
     } catch (err) {
         // Parsing BODY Failed, log error
         console.log(err);
+        result.body = err;
     }
     return result;
 };
