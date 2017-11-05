@@ -1,8 +1,6 @@
 {
-    "url": "https://www.apify.com/",
+    "url": "https://www.sreality.cz/detail/prodej/byt/1+kk/harrachov-harrachov-/2248286556#img=0&fullscreen=false",
     "searchFor": {
-        "intercom": "kod1r788",
-        "cdn": "cdn.apify.com",
-        "tweet": "We’re hiring"
+        "velikost": "38 m"
     }
 }

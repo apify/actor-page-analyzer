@@ -179,8 +179,9 @@ async function analysePage(browser, url, searchFor) {
                 }
                 if (results.length > 0) {
                     xhrRequestResults.push({
-                        request,
-                        results
+                        request: `${request.method} ${request.url}`,
+                        response: request.responseBody,
+                        searchResults: results
                     });
                 }
             });
