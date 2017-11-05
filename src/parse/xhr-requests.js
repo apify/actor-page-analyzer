@@ -1,7 +1,6 @@
 const VALUABLE_CONTENT_TYPES = [
-    'text/html',
-    'application/json',
-    'application/ld+json',
+    'html',
+    'json',
 ];
 
 // attempt to parse JSON response, save error if parsing fails
@@ -45,7 +44,7 @@ export default async function parseResponse(response) {
     result.ignore = false;
 
     try {
-        if (contentType.indexOf('json') !== -1 || contentType.indexOf('json') !== -1) {
+        if (contentType.indexOf('json') !== -1) {
             result.body = await parseJSONResponse(response);
         } else {
             result.body = await response.text();
@@ -53,6 +52,7 @@ export default async function parseResponse(response) {
     } catch (err) {
         // Parsing BODY Failed, log error
         console.log(err);
+        result.body = err;
     }
     return result;
 }
