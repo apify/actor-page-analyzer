@@ -23,6 +23,9 @@ function parseMetadata({ html, $ }) {
             result[name] = $tag.attr('content');
         }
     });
+    $('head title').each(function () {
+        result.title = $(this).text();
+    });
 
     return result;
 }
