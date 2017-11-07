@@ -116,6 +116,7 @@ export default class PageScrapper {
             this.page.on('response', this.onResponse);
 
             this.call('started', { url, timestamp: new Date() });
+
             await this.page.goto(url);
 
             this.page.waitForNavigation({ waitUntil: 'networkidle', networkIdleTimeout: 2000 });
