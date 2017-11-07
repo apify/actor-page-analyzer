@@ -4,6 +4,7 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 exports.cleanData = exports.normalize = exports.convertCommasInNumbers = exports.removeSpaces = exports.replaceHTMLEntities = exports.removeHTMLTags = exports.requestPromised = undefined;
+exports.findCommonAncestors = findCommonAncestors;
 
 var _request = require('request');
 
@@ -55,3 +56,27 @@ const cleanData = exports.cleanData = data => {
     cache = null; // clean memory
     return result;
 };
+
+function findCommonAncestors(data, items, removeFirstCharacter = false) {
+    const importantAncestors = [];
+    items.forEach(({ path }) => {
+        const cleanPath = removeFirstCharacter ? path.substr(1) : path;
+        let indexOfBracket = cleanPath.indexOf('[');
+        if (indexOfBracket === -1) indexOfBracket = Number.MAX_SAFE_INTEGER;
+        let indexOfDot = cleanPath.indexOf('.');
+        if (indexOfDot === -1) indexOfDot = Number.MAX_SAFE_INTEGER;
+        const endOfPropertyName = Math.min(indexOfBracket, indexOfDot);
+        let property = cleanPath.substr(0, endOfPropertyName);
+        if (indexOfBracket === 0) {
+            property = cleanPath.substr(1, cleanPath.indexOf(']') - 1);
+        }
+        if (importantAncestors.indexOf(property) === -1) importantAncestors.push(property);
+    });
+    const cleanedUpProperties = {};
+
+    importantAncestors.forEach(property => {
+        cleanedUpProperties[property] = data[property];
+    });
+
+    return cleanedUpProperties;
+}

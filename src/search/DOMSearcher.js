@@ -1,28 +1,8 @@
 import cheerio from 'cheerio';
-import { concat, isObject } from 'lodash';
+import { concat, isArray, sortBy } from 'lodash';
 import { normalize } from '../utils';
 
-function createSelector(path, item) {
-    const completePath = concat(path, item);
-
-    const elementsWithId = completePath.map(step => !!step.id);
-    const lastUsableID = elementsWithId.lastIndexOf(true);
-
-    const importantPartOfPath = lastUsableID !== -1
-        ? completePath.slice(lastUsableID)
-        : completePath;
-
-    const parts = importantPartOfPath.map(step => {
-        if (step.id) return `#${step.id}`;
-        const classes = step.class ? `.${step.class.split(' ').join('.')}` : '';
-        let position = '';
-        if (step.nthChild === 0) position = '';
-        else if (step.nthChild > 0) position = `:nth-child(${step.nthChild + 1})`;
-        return `${step.tag}${classes}${position}`;
-    });
-
-    return parts.join(' > ');
-}
+const LETTER_DEDUCTION = 0.01;
 
 export default class DOMSearcher {
     constructor({ $, html }) {
@@ -30,10 +10,42 @@ export default class DOMSearcher {
         this.$ = $ || cheerio.load(html);
         this.searchElement = this.searchElement.bind(this);
         this.findPath = this.findPath.bind(this);
+        this.createSelector = this.createSelector.bind(this);
     }
+
     setHTML(html) {
         this.$ = cheerio.load(html);
     }
+
+    createSelector(path, item) {
+        const { $ } = this;
+
+        const completePath = concat(path, item);
+
+        const elementsWithId = completePath.map(step => !!step.id);
+        const lastUsableID = elementsWithId.lastIndexOf(true);
+
+        const importantPartOfPath = lastUsableID !== -1
+            ? completePath.slice(lastUsableID)
+            : completePath;
+
+        const parts = importantPartOfPath.map(step => {
+            if (step.id) return `#${step.id}`;
+            const classes = step.class ? `.${step.class.split(' ').join('.')}` : '';
+            let position = '';
+            if (step.nthChild === 0) position = '';
+            else if (step.nthChild > 0) position = `:nth-child(${step.nthChild + 1})`;
+            return `${step.tag}${classes}${position}`;
+        });
+
+        let selector = parts.pop();
+        while ($(selector).length > 1) {
+            selector = `${parts.pop()} > ${selector}`;
+        }
+
+        return selector;
+    }
+
     searchElement(tagName, $element) {
         const { searchElement, $ } = this;
 
@@ -44,15 +56,16 @@ export default class DOMSearcher {
             id: $element.attr('id'),
         };
         const normalizedText = normalize(elementText); // to lower case to match most results
-        const containsSearchString = this.normalizedSearch.reduce(
-            (contains, searchString) => {
-                if (contains) return true;
-                return normalizedText.indexOf(searchString) !== -1;
-            },
-            false,
-        );
+        const score = this.normalizedSearch.reduce((lastScore, searchString) => {
+            if (normalizedText.indexOf(searchString) === -1) return lastScore;
+            const remainingTextLength = normalizedText.replace(searchString, '').length;
+            const searchScore = (1 + (remainingTextLength * LETTER_DEDUCTION));
+            return Math.max(lastScore, searchScore);
+        }, 0);
 
-        if (!containsSearchString) return elementData;
+        if (score === 0) return elementData;
+
+        elementData.textScore = score;
 
         const childElements = $element.children();
         if (childElements.length === 0) {
@@ -76,10 +89,14 @@ export default class DOMSearcher {
     }
 
     findPath(currentPath, nthChild, item) {
-        const { findPath } = this;
+        const { findPath, createSelector } = this;
         if (item.text) {
             const selector = createSelector(currentPath, item);
-            this.foundPaths.push({ selector, text: item.text });
+            this.foundPaths.push({
+                selector,
+                text: item.text,
+                score: (1 + (selector.split('>').length * 0.2)) * item.textScore,
+            });
             return;
         }
 
@@ -97,12 +114,12 @@ export default class DOMSearcher {
 
     find(searchFor) {
         const { $, searchElement, findPath } = this;
-        if (!searchFor || !isObject(searchFor)) {
+        if (!searchFor || !isArray(searchFor)) {
             throw new Error('DOMSearcher requires array of search queries.');
         }
 
         this.searchFor = searchFor;
-        this.normalizedSearch = Object.keys(searchFor).map(key => normalize(searchFor[key]));
+        this.normalizedSearch = searchFor.map(searchString => normalize(searchString));
         this.foundPaths = [];
 
         let $body = $('body');
@@ -115,7 +132,6 @@ export default class DOMSearcher {
             .filter(child => child.text || child.children)
             .forEach((child, index) => findPath([], index, child));
 
-        // console.log(util.inspect(this.foundPaths, { showHidden: false, depth: null }));
-        return this.foundPaths;
+        return sortBy(this.foundPaths, ['score']).map(({ selector, text }) => ({ selector, text }));
     }
 }

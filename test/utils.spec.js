@@ -4,6 +4,7 @@ import {
     removeSpaces,
     convertCommasInNumbers,
     normalize,
+    findCommonAncestors,
 } from '../src/utils';
 
 describe('The removeHTMLTags function', () => {
@@ -51,5 +52,57 @@ describe('The normalize function', () => {
         const expectedResult = '4299.23';
         const result = normalize(base);
         expect(result).to.be.equal(expectedResult);
+    });
+});
+
+describe('The findCommonAncestors function', () => {
+    it('finds ancestor of objects', () => {
+        const baseData = {
+            item: {
+                its: 'contents',
+            },
+            anotherItem: {
+                its: 'contents',
+            },
+        };
+
+        const basePaths = [
+            { path: '.item.its' },
+        ];
+
+        const expectedResult = {
+            item: {
+                its: 'contents',
+            },
+        };
+
+        const result = findCommonAncestors(baseData, basePaths, true);
+        expect(result).to.deep.equal(expectedResult);
+    });
+    it('finds ancestor of arrays', () => {
+        const baseData = [
+            {
+                its: 'contents',
+            },
+            {
+                anothers: 'contents',
+            },
+            {
+                its: 'another content',
+            },
+        ];
+
+        const basePaths = [
+            { path: '[0].its' },
+        ];
+
+        const expectedResult = {
+            0: {
+                its: 'contents',
+            },
+        };
+
+        const result = findCommonAncestors(baseData, basePaths);
+        expect(result).to.deep.equal(expectedResult);
     });
 });

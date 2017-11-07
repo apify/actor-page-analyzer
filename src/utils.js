@@ -1,6 +1,6 @@
 import request from 'request';
 import { AllHtmlEntities } from 'html-entities';
-import { isString } from 'lodash';
+import { isString, isArray } from 'lodash';
 
 const entities = new AllHtmlEntities();
 
@@ -46,3 +46,28 @@ export const cleanData = (data) => {
     cache = null; // clean memory
     return result;
 };
+
+export function findCommonAncestors(data, items, removeFirstCharacter = false) {
+    const importantAncestors = [];
+    items.forEach(({ path }) => {
+        const cleanPath = removeFirstCharacter ? path.substr(1) : path;
+        let indexOfBracket = cleanPath.indexOf('[');
+        if (indexOfBracket === -1) indexOfBracket = Number.MAX_SAFE_INTEGER;
+        let indexOfDot = cleanPath.indexOf('.');
+        if (indexOfDot === -1) indexOfDot = Number.MAX_SAFE_INTEGER;
+        const endOfPropertyName = Math.min(indexOfBracket, indexOfDot);
+        let property = cleanPath.substr(0, endOfPropertyName);
+        if (indexOfBracket === 0) {
+            property = cleanPath.substr(1, cleanPath.indexOf(']') - 1);
+        }
+        if (importantAncestors.indexOf(property) === -1) importantAncestors.push(property);
+    });
+    const cleanedUpProperties = {};
+
+    importantAncestors
+        .forEach(property => {
+            cleanedUpProperties[property] = data[property];
+        });
+
+    return cleanedUpProperties;
+}

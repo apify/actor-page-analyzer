@@ -4,7 +4,6 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 exports.getNativeWindowProperties = undefined;
-exports.cleanWindowProperties = cleanWindowProperties;
 exports.default = evalWindowProperties;
 
 var _lodash = require('lodash');
@@ -22,28 +21,6 @@ const getNativeWindowProperties = exports.getNativeWindowProperties = async page
     });
     return nativeWindowsProperties;
 };
-
-function cleanWindowProperties(properties, found) {
-    const importantProperties = [];
-    found.forEach(({ path }) => {
-        const cleanPath = path.substr(1);
-
-        let indexOfBracket = cleanPath.indexOf('[');
-        if (indexOfBracket === -1) indexOfBracket = Number.MAX_SAFE_INTEGER;
-        let indexOfDot = cleanPath.indexOf('.');
-        if (indexOfDot === -1) indexOfDot = Number.MAX_SAFE_INTEGER;
-        const endOfPropertyName = Math.min(indexOfBracket, indexOfDot);
-
-        const property = cleanPath.substr(0, endOfPropertyName);
-        if (importantProperties.indexOf(property) === -1) importantProperties.push(property);
-    });
-
-    const cleanedUpProperties = {};
-    Object.keys(properties).filter(property => importantProperties.indexOf(property) !== -1).forEach(property => {
-        cleanedUpProperties[property] = properties[property];
-    });
-    return cleanedUpProperties;
-}
 
 // Evaluate window properties, save content for variables that are not function
 function evalWindowProperties(properties) {

@@ -95,7 +95,11 @@ class PageScrapper {
         } else {
             this.requests[request._requestId] = undefined;
         }
-        this.call('response', rec);
+        if (this.mainRequestId === request._requestId) {
+            this.call('initial-response', rec);
+        } else {
+            this.call('response', rec);
+        }
     }
 
     async onPageError(err) {
@@ -131,13 +135,12 @@ class PageScrapper {
             this.page.on('response', this.onResponse);
 
             this.call('started', { url, timestamp: new Date() });
+
             await this.page.goto(url);
 
             this.page.waitForNavigation({ waitUntil: 'networkidle', networkIdleTimeout: 2000 });
-
             this.call('loaded', { url, timestamp: new Date() });
 
-            const pageUrl = await this.page.url();
             const rec = this.requests[this.mainRequestId];
 
             if (!rec) {
@@ -152,12 +155,6 @@ class PageScrapper {
                 return true;
             }).map(requestId => this.requests[requestId]));
 
-            this.call('initial-response', {
-                url: pageUrl,
-                status: rec.responseStatus,
-                headers: rec.responseHeaders
-            });
-
             const data = await this.page.evaluate(() => ({
                 html: document.documentElement.innerHTML, // eslint-disable-line
                 allWindowProperties: Object.keys(window) // eslint-disable-line
@@ -169,10 +166,6 @@ class PageScrapper {
             let windowProperties = _lodash2.default.filter(data.allWindowProperties, propName => !nativeWindowsProperties[propName]);
             windowProperties = await this.page.evaluate(_windowProperties2.default, windowProperties);
             this.call('window-properties', windowProperties);
-
-            const screenshotBuffer = await this.page.screenshot();
-            const screenshotBase64 = screenshotBuffer.toString('base64');
-            this.call('screenshot', screenshotBase64);
 
             this.call('done', new Date());
         } catch (e) {

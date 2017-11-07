@@ -1,11 +1,13 @@
-import { isArray, isObject } from 'lodash';
+import { isArray, isObject, sortBy } from 'lodash';
 import { normalize } from '../utils';
+
+const LETTER_DEDUCTION = 0.01;
 
 export default class TreeSearcher {
     constructor() {
         this.findInTree = this.findInTree.bind(this);
     }
-    findInTree(data, path = '') {
+    findInTree(data, path = '', depth = 0) {
         const { normalizedSearch, findInTree } = this;
 
         if (!data) return;
@@ -15,32 +17,41 @@ export default class TreeSearcher {
                 item = item.toString();
             }
             const normalizedText = normalize(item);
-            const foundString = normalizedSearch.reduce((found, searchedString) => {
-                if (found) return true;
-                return normalizedText.indexOf(searchedString) !== -1;
-            }, false);
-            if (foundString) {
+            const pathScore = depth;
+            const score = normalizedSearch.reduce((lastScore, searchString) => {
+                if (normalizedText.indexOf(searchString) === -1) return lastScore;
+                const remainingTextLength = normalizedText.replace(searchString, '').length;
+                if (remainingTextLength > 40) return lastScore;
+                const searchScore = pathScore * (1 + (remainingTextLength * LETTER_DEDUCTION));
+                return Math.max(lastScore, searchScore);
+            }, 0);
+
+            if (score > 0) {
                 this.foundPaths.push({
                     path: `${path}`,
                     value: data,
+                    score,
                 });
             }
         } else if (isArray(data)) {
             data.forEach((value, index) => {
-                findInTree(value, `${path}[${index}]`);
+                findInTree(value, `${path}[${index}]`, depth + 1);
             });
         } else if (isObject(data)) {
             Object.keys(data).forEach(key => {
                 const value = data[key];
-                findInTree(value, `${path}.${key}`);
+                findInTree(value, `${path}.${key}`, depth + 1);
             });
         }
     }
     find(data, searchFor, path = '') {
         this.foundPaths = [];
         this.searchFor = searchFor;
-        this.normalizedSearch = Object.keys(searchFor).map(key => normalize(searchFor[key]));
+        this.normalizedSearch = searchFor.map(searchString => normalize(searchString));
         this.findInTree(data, path);
-        return this.foundPaths;
+        return sortBy(this.foundPaths, ['score']).map((foundPath) => ({
+            path: foundPath.path,
+            value: foundPath.value,
+        }));
     }
 }

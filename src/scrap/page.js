@@ -80,7 +80,11 @@ export default class PageScrapper {
         } else {
             this.requests[request._requestId] = undefined;
         }
-        this.call('response', rec);
+        if (this.mainRequestId === request._requestId) {
+            this.call('initial-response', rec);
+        } else {
+            this.call('response', rec);
+        }
     }
 
     async onPageError(err) {
@@ -120,10 +124,8 @@ export default class PageScrapper {
             await this.page.goto(url);
 
             this.page.waitForNavigation({ waitUntil: 'networkidle', networkIdleTimeout: 2000 });
-
             this.call('loaded', { url, timestamp: new Date() });
 
-            const pageUrl = await this.page.url();
             const rec = this.requests[this.mainRequestId];
 
             if (!rec) {
@@ -143,12 +145,6 @@ export default class PageScrapper {
                     .map(requestId => this.requests[requestId]),
             );
 
-            this.call('initial-response', {
-                url: pageUrl,
-                status: rec.responseStatus,
-                headers: rec.responseHeaders,
-            });
-
             const data = await this.page.evaluate(() => ({
                 html: document.documentElement.innerHTML, // eslint-disable-line
                 allWindowProperties: Object.keys(window), // eslint-disable-line
@@ -160,10 +156,6 @@ export default class PageScrapper {
             let windowProperties = _.filter(data.allWindowProperties, (propName) => !nativeWindowsProperties[propName]);
             windowProperties = await this.page.evaluate(evalWindowProperties, windowProperties);
             this.call('window-properties', windowProperties);
-
-            const screenshotBuffer = await this.page.screenshot();
-            const screenshotBase64 = screenshotBuffer.toString('base64');
-            this.call('screenshot', screenshotBase64);
 
             this.call('done', new Date());
         } catch (e) {
