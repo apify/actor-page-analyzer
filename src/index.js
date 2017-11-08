@@ -27,10 +27,10 @@ function timeoutPromised(timeout) {
 }
 
 async function waitForEnd(output) {
-    let done = output.get('analysisEnded');
+    let done = output.get('outputFinished');
     while (!done) {
         await timeoutPromised(100); // eslint-disable-line
-        done = output.get('analysisEnded');
+        done = output.get('outputFinished');
     }
     return done;
 }
@@ -137,8 +137,8 @@ async function analysePage(browser, url, searchFor) {
         const treeSearcher = new TreeSearcher();
         try {
             const foundWindowProperties = treeSearcher.find(scrappedData.windowProperties, searchFor);
-            await output.set('windowPropertiesFound', foundWindowProperties);
-            await output.set(
+            output.set('windowPropertiesFound', foundWindowProperties);
+            output.set(
                 'windowProperties',
                 findCommonAncestors(
                     scrappedData.windowProperties,
@@ -151,7 +151,7 @@ async function analysePage(browser, url, searchFor) {
             console.error('Window properties parsing failed');
             console.error(error);
         }
-        await output.set('windowPropertiesSearched', new Date());
+        output.set('windowPropertiesSearched', new Date());
     });
 
     scrapper.on('screenshot', (data) => {
@@ -184,13 +184,13 @@ async function analysePage(browser, url, searchFor) {
                     });
                 }
             });
-            await output.set('xhrRequestsFound', xhrRequestResults);
+            output.set('xhrRequestsFound', xhrRequestResults);
             console.log('xhrRequests searched');
         } catch (err) {
             console.log('XHR Request search failed');
             console.error(err);
         }
-        await output.set('xhrRequestsSearched', new Date());
+        output.set('xhrRequestsSearched', new Date());
     });
 
     scrapper.on('done', (data) => {
@@ -216,11 +216,7 @@ async function analysePage(browser, url, searchFor) {
         await waitForEnd(output);
     } catch (error) {
         console.error(error);
-        try {
-            await output.set('error', error);
-        } catch (outputErr) {
-            console.error(outputErr);
-        }
+        output.set('error', error);
     }
 }
 

@@ -48,13 +48,26 @@ class OutputGenerator {
             error: null,
             pageError: null
         };
+        this.writeTimeout = null;
+        this.writeOutput = this.writeOutput.bind(this);
     }
 
     get(field) {
         return this.fields[field];
     }
 
-    async set(field, value) {
+    async writeOutput() {
+        const data = JSON.stringify(this.fields, null, 2);
+        try {
+            await _apify2.default.setValue('OUTPUT', data, { contentType: 'application/json' });
+            if (this.fields.analysisEnded) this.fields.outputFinished = true;
+        } catch (error) {
+            console.error('could not save output');
+            console.error(error);
+        }
+    }
+
+    set(field, value) {
         this.fields[field] = value;
 
         if (!this.fields.analysisEnded) {
@@ -68,12 +81,8 @@ class OutputGenerator {
             }
         }
 
-        try {
-            await _apify2.default.setValue('OUTPUT', JSON.stringify(this.fields, null, 2), { contentType: 'application/json' });
-        } catch (error) {
-            console.log('output error');
-            console.error(error);
-        }
+        if (this.writeTimeout) clearTimeout(this.writeTimeout);
+        this.writeTimeout = setTimeout(this.writeOutput, 300);
     }
 }
 exports.default = OutputGenerator;
