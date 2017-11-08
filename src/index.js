@@ -241,6 +241,7 @@ Apify.main(async () => {
         const browser = await puppeteer.launch({ args: ['--no-sandbox'], headless: true });
         await analysePage(browser, input.url, input.searchFor);
     } catch (error) {
+        console.log('Top level error');
         console.error(error);
     }
 });
