@@ -10,7 +10,7 @@ import parseSchemaOrgData from './parse/schema-org';
 import parseJsonLD from './parse/json-ld';
 import DOMSearcher from './search/DOMSearcher';
 import TreeSearcher from './search/TreeSearcher';
-/* import CrawlerGenerator from './generate/Crawler'; */
+import CrawlerGenerator from './generate/Crawler';
 import OutputGenerator from './generate/Output';
 import { findCommonAncestors } from './utils';
 
@@ -26,11 +26,11 @@ function timeoutPromised(timeout) {
     });
 }
 
-async function waitForEnd(output) {
-    let done = output.get('outputFinished');
+async function waitForEnd(output, field) {
+    let done = output.get(field);
     while (!done) {
         await timeoutPromised(100); // eslint-disable-line
-        done = output.get('outputFinished');
+        done = output.get(field);
     }
     return done;
 }
@@ -60,7 +60,11 @@ async function analysePage(browser, url, searchFor) {
 
     scrapper.on('initial-response', async (response) => {
         console.log('initial response');
-        output.set('initialResponse', response.url);
+        output.set('initialResponse', {
+            url: response.url,
+            status: response.status,
+            headers: response.responseHeaders,
+        });
 
         const html = response.responseBody;
         const treeSearcher = new TreeSearcher();
@@ -213,10 +217,25 @@ async function analysePage(browser, url, searchFor) {
     try {
         await scrapper.start(url);
         // prevent act from closing before all data is asynchronously parsed and searched
-        await waitForEnd(output);
+        await waitForEnd(output, 'analysisEnded');
+
+        const crawlerGenerator = new CrawlerGenerator();
+        const crawler = crawlerGenerator.generate(
+            url,
+            {
+                schemaOrg: output.get('schemaOrgDataFound'),
+                metadata: output.get('metaDataFound'),
+                jsonLD: output.get('jsonLDDataFound'),
+                window: output.get('windowPropertiesFound'),
+                html: output.get('htmlFound'),
+            },
+            searchFor,
+        );
+        output.set('crawler', crawler);
+
+        await waitForEnd(output, 'outputFinished');
     } catch (error) {
         console.error(error);
-        output.set('error', error);
     }
 }
 

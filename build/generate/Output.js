@@ -45,6 +45,7 @@ class OutputGenerator {
             htmlFound: [],
             xhrRequests: [],
             xhrRequestsFound: [],
+            crawler: null,
             error: null,
             pageError: null
         };
@@ -60,7 +61,7 @@ class OutputGenerator {
         const data = JSON.stringify(this.fields, null, 2);
         try {
             await _apify2.default.setValue('OUTPUT', data, { contentType: 'application/json' });
-            if (this.fields.analysisEnded) this.fields.outputFinished = true;
+            if (this.fields.crawler) this.fields.outputFinished = true;
         } catch (error) {
             console.error('could not save output');
             console.error(error);

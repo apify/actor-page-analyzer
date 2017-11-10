@@ -40,6 +40,10 @@ var _TreeSearcher = require('./search/TreeSearcher');
 
 var _TreeSearcher2 = _interopRequireDefault(_TreeSearcher);
 
+var _Crawler = require('./generate/Crawler');
+
+var _Crawler2 = _interopRequireDefault(_Crawler);
+
 var _Output = require('./generate/Output');
 
 var _Output2 = _interopRequireDefault(_Output);
@@ -49,8 +53,6 @@ var _utils = require('./utils');
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // Definition of the input
-
-/* import CrawlerGenerator from './generate/Crawler'; */
 const INPUT_TYPE = `{
     url: String,
     searchFor: Array
@@ -62,11 +64,11 @@ function timeoutPromised(timeout) {
     });
 }
 
-async function waitForEnd(output) {
-    let done = output.get('outputFinished');
+async function waitForEnd(output, field) {
+    let done = output.get(field);
     while (!done) {
         await timeoutPromised(100); // eslint-disable-line
-        done = output.get('outputFinished');
+        done = output.get(field);
     }
     return done;
 }
@@ -96,7 +98,11 @@ async function analysePage(browser, url, searchFor) {
 
     scrapper.on('initial-response', async response => {
         console.log('initial response');
-        output.set('initialResponse', response.url);
+        output.set('initialResponse', {
+            url: response.url,
+            status: response.status,
+            headers: response.responseHeaders
+        });
 
         const html = response.responseBody;
         const treeSearcher = new _TreeSearcher2.default();
@@ -230,10 +236,21 @@ async function analysePage(browser, url, searchFor) {
     try {
         await scrapper.start(url);
         // prevent act from closing before all data is asynchronously parsed and searched
-        await waitForEnd(output);
+        await waitForEnd(output, 'analysisEnded');
+
+        const crawlerGenerator = new _Crawler2.default();
+        const crawler = crawlerGenerator.generate(url, {
+            schemaOrg: output.get('schemaOrgDataFound'),
+            metadata: output.get('metaDataFound'),
+            jsonLD: output.get('jsonLDDataFound'),
+            window: output.get('windowPropertiesFound'),
+            html: output.get('htmlFound')
+        }, searchFor);
+        output.set('crawler', crawler);
+
+        await waitForEnd(output, 'outputFinished');
     } catch (error) {
         console.error(error);
-        output.set('error', error);
     }
 }
 

@@ -20,6 +20,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 const IGNORED_EXTENSIONS = ['.css', '.png', '.jpg', '.svg'];
 
+const USER_AGENTS = ['Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/604.3.5 (KHTML, like Gecko) Version/11.0.1 Safari/604.3.5', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:56.0) Gecko/20100101 Firefox/56.0', 'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko'];
+
 class PageScrapper {
     constructor(browser) {
         this.browser = browser;
@@ -125,6 +127,8 @@ class PageScrapper {
 
         try {
             this.page = await this.browser.newPage();
+            const agentID = Math.floor(Math.random() * 4);
+            await this.page.setUserAgent(USER_AGENTS[agentID]);
             this.page.setRequestInterceptionEnabled(true);
 
             this.page.on('error', this.onPageError);
@@ -165,12 +169,11 @@ class PageScrapper {
             // Extract list of non-native window properties
             let windowProperties = _lodash2.default.filter(data.allWindowProperties, propName => !nativeWindowsProperties[propName]);
             windowProperties = await this.page.evaluate(_windowProperties2.default, windowProperties);
+            this.closePage();
             this.call('window-properties', windowProperties);
-
             this.call('done', new Date());
         } catch (e) {
             this.call('error', `Loading of web page failed (${url}): ${e}`);
-        } finally {
             this.closePage();
         }
     }

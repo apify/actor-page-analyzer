@@ -1,4 +1,5 @@
 import util from 'util';
+import pageFunctionTemplate from '../templates/PageFunction';
 import crawlerTemplate from '../templates/crawler';
 import jsonLDCrawlerTemplate from '../templates/jsonLDCrawler';
 
@@ -27,10 +28,9 @@ function flattenResults(searchResults) {
 
 function processResults(results, searchFor) {
     const processedResults = {};
-    Object.keys(searchFor).forEach((key) => {
-        const searchString = searchFor[key]
+    searchFor.forEach((searchString) => {
         const normalizedSearch = searchString.toLowerCase()
-        processedResults[key] = results
+        processedResults[searchString] = results
             .map(result => {
                 const value = String(result.value || result.text);
                 const normalizedValue = value.toLowerCase();
@@ -78,7 +78,7 @@ function processResults(results, searchFor) {
 }
 
 export default class CrawlerGenerator {
-    generate(searchResults, searchFor) {
+    generate(url, searchResults, searchFor) {
         const flattenedResults = flattenResults(searchResults);
         this.results = processResults(flattenedResults, searchFor);
         const data = {
@@ -86,7 +86,7 @@ export default class CrawlerGenerator {
             requiresSchemaOrg: false,
             crawlerItems: [],
         };
-        Object.keys(this.results).map(searchString => {
+        Object.keys(this.results).map((searchString, i) => {
             const options = this.results[searchString];
             const bestOption = options.length ? options[0] : null;
             if (!bestOption) {
@@ -97,32 +97,45 @@ export default class CrawlerGenerator {
             const trimmedPath = bestOption.path ? bestOption.path.substr(1) : '';
 
             switch (bestOption.type) {
-            case 'schemaOrg':
+            case 'schemaOrg': {
                 data.requiresJQuery = true;
                 data.requiresSchemaOrg = true;
-                data.crawlerItems.push(`parsedData['${searchString}'] = schemaOrg${bestOption.path};`);
+                const key = bestOption.path.split('.').pop()
+                data.crawlerItems.push(`parsedData['${key}'] = schemaOrg${bestOption.path};`);
                 break;
-            case 'metadata':
+            }
+            case 'metadata': {
                 data.requiresJQuery = true;
-                data.crawlerItems.push(`parsedData['${searchString}'] = $('meta[property="${trimmedPath}"], meta[name="${trimmedPath}"]').attr('content');`);
+                data.crawlerItems.push(`parsedData['${trimmedPath}'] = $('meta[property="${trimmedPath}"], meta[name="${trimmedPath}"]').attr('content');`);
                 break;
-            case 'jsonLD':
+            }
+            case 'jsonLD': {
                 data.requiresJQuery = true;
-                data.crawlerItems.push(jsonLDCrawlerTemplate(searchString, bestOption.path));
+                const key = bestOption.path.split('.').pop()
+                data.crawlerItems.push(jsonLDCrawlerTemplate(key, bestOption.path));
                 break;
-            case 'window':
-                data.crawlerItems.push(`parsedData['${searchString}'] = window${bestOption.path};`);
+            }
+            case 'window': {
+                const key = bestOption.path.split('.').pop()
+                data.crawlerItems.push(`parsedData['${bestOption.path}'] = window${bestOption.path};`);
                 break;
-            case 'html':
+            }
+            case 'html': {
                 data.requiresJQuery = true;
-                data.crawlerItems.push(`parsedData['${searchString}'] = $('${bestOption.selector}').text();`);
+                data.crawlerItems.push(`parsedData['${i}'] = $('${bestOption.selector}').text();`);
                 break;
+            }
             // no default
             }
 
             return data;
         });
 
-        return crawlerTemplate(data);
+        const pageFunction = pageFunctionTemplate(data);
+        return crawlerTemplate({
+            requiresJQuery: data.requiresJQuery,
+            pageFunction,
+            url: url,
+        });
     }
 }

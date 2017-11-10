@@ -10,6 +10,10 @@ var _util = require('util');
 
 var _util2 = _interopRequireDefault(_util);
 
+var _PageFunction = require('../templates/PageFunction');
+
+var _PageFunction2 = _interopRequireDefault(_PageFunction);
+
 var _crawler = require('../templates/crawler');
 
 var _crawler2 = _interopRequireDefault(_crawler);
@@ -44,10 +48,9 @@ function flattenResults(searchResults) {
 
 function processResults(results, searchFor) {
     const processedResults = {};
-    Object.keys(searchFor).forEach(key => {
-        const searchString = searchFor[key];
+    searchFor.forEach(searchString => {
         const normalizedSearch = searchString.toLowerCase();
-        processedResults[key] = results.map(result => {
+        processedResults[searchString] = results.map(result => {
             const value = String(result.value || result.text);
             const normalizedValue = value.toLowerCase();
             return _extends({}, result, {
@@ -89,7 +92,7 @@ function processResults(results, searchFor) {
 }
 
 class CrawlerGenerator {
-    generate(searchResults, searchFor) {
+    generate(url, searchResults, searchFor) {
         const flattenedResults = flattenResults(searchResults);
         this.results = processResults(flattenedResults, searchFor);
         const data = {
@@ -97,7 +100,7 @@ class CrawlerGenerator {
             requiresSchemaOrg: false,
             crawlerItems: []
         };
-        Object.keys(this.results).map(searchString => {
+        Object.keys(this.results).map((searchString, i) => {
             const options = this.results[searchString];
             const bestOption = options.length ? options[0] : null;
             if (!bestOption) {
@@ -109,32 +112,50 @@ class CrawlerGenerator {
 
             switch (bestOption.type) {
                 case 'schemaOrg':
-                    data.requiresJQuery = true;
-                    data.requiresSchemaOrg = true;
-                    data.crawlerItems.push(`parsedData['${searchString}'] = schemaOrg${bestOption.path};`);
-                    break;
+                    {
+                        data.requiresJQuery = true;
+                        data.requiresSchemaOrg = true;
+                        const key = bestOption.path.split('.').pop();
+                        data.crawlerItems.push(`parsedData['${key}'] = schemaOrg${bestOption.path};`);
+                        break;
+                    }
                 case 'metadata':
-                    data.requiresJQuery = true;
-                    data.crawlerItems.push(`parsedData['${searchString}'] = $('meta[property="${trimmedPath}"], meta[name="${trimmedPath}"]').attr('content');`);
-                    break;
+                    {
+                        data.requiresJQuery = true;
+                        data.crawlerItems.push(`parsedData['${trimmedPath}'] = $('meta[property="${trimmedPath}"], meta[name="${trimmedPath}"]').attr('content');`);
+                        break;
+                    }
                 case 'jsonLD':
-                    data.requiresJQuery = true;
-                    data.crawlerItems.push((0, _jsonLDCrawler2.default)(searchString, bestOption.path));
-                    break;
+                    {
+                        data.requiresJQuery = true;
+                        const key = bestOption.path.split('.').pop();
+                        data.crawlerItems.push((0, _jsonLDCrawler2.default)(key, bestOption.path));
+                        break;
+                    }
                 case 'window':
-                    data.crawlerItems.push(`parsedData['${searchString}'] = window${bestOption.path};`);
-                    break;
+                    {
+                        const key = bestOption.path.split('.').pop();
+                        data.crawlerItems.push(`parsedData['${bestOption.path}'] = window${bestOption.path};`);
+                        break;
+                    }
                 case 'html':
-                    data.requiresJQuery = true;
-                    data.crawlerItems.push(`parsedData['${searchString}'] = $('${bestOption.selector}').text();`);
-                    break;
+                    {
+                        data.requiresJQuery = true;
+                        data.crawlerItems.push(`parsedData['${i}'] = $('${bestOption.selector}').text();`);
+                        break;
+                    }
                 // no default
             }
 
             return data;
         });
 
-        return (0, _crawler2.default)(data);
+        const pageFunction = (0, _PageFunction2.default)(data);
+        return (0, _crawler2.default)({
+            requiresJQuery: data.requiresJQuery,
+            pageFunction,
+            url: url
+        });
     }
 }
 exports.default = CrawlerGenerator;
