@@ -16,14 +16,14 @@ var _lodash = require('lodash');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-const entities = new _htmlEntities.AllHtmlEntities();
-
 const requestPromised = exports.requestPromised = async opts => new Promise((resolve, reject) => (0, _request2.default)(opts, (error, response, body) => {
     if (error) {
         return reject(error);
     }
     return resolve({ body, response });
 }));
+
+const entities = new _htmlEntities.AllHtmlEntities();
 
 const removeHTMLTags = exports.removeHTMLTags = text => text.replace(/<[^>]*>?/g, '');
 const replaceHTMLEntities = exports.replaceHTMLEntities = text => entities.decode(text);

@@ -48,7 +48,7 @@ class DOMSearcher {
         });
 
         let selector = parts.pop();
-        while ($(selector).length > 1) {
+        while ($(selector).length > 1 && parts.length > 0) {
             selector = `${parts.pop()} > ${selector}`;
         }
 
