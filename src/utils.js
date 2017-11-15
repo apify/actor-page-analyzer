@@ -2,8 +2,6 @@ import request from 'request';
 import { AllHtmlEntities } from 'html-entities';
 import { isString, isArray } from 'lodash';
 
-const entities = new AllHtmlEntities();
-
 export const requestPromised = async (opts) => (
     new Promise((resolve, reject) => (
         request(opts, (error, response, body) => {
@@ -14,6 +12,8 @@ export const requestPromised = async (opts) => (
         })
     ))
 );
+
+const entities = new AllHtmlEntities();
 
 export const removeHTMLTags = (text) => text.replace(/<[^>]*>?/g, '');
 export const replaceHTMLEntities = (text) => entities.decode(text);
