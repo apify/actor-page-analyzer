@@ -31,17 +31,27 @@ export default class DOMSearcher {
 
         const parts = importantPartOfPath.map(step => {
             if (step.id) return `#${step.id}`;
-            const classes = step.class ? `.${step.class.split(' ').join('.')}` : '';
+            let classes = step.class ? `.${step.class.split(' ').join('.')}` : '';
+            // remove bootstrap classes
+            classes = classes.replace(/.col-[^.]+-\d+/gi, '');
             let position = '';
             if (step.nthChild === 0) position = '';
             else if (step.nthChild > 0) position = `:nth-child(${step.nthChild + 1})`;
             return `${step.tag}${classes}${position}`;
         });
 
-        let selector = parts.pop();
+
+        let lastPart = parts.pop();
+        let selector = lastPart;
         while ($(selector).length > 1 && parts.length > 0) {
-            selector = `${parts.pop()} > ${selector}`;
+            lastPart = parts.pop();
+            selector = `${lastPart} > ${selector}`;
+            console.log(selector, $(selector).length);
         }
+        if ($(selector).length > 1 && lastPart.indexOf(':nth-child') === -1) {
+            selector = selector.replace(lastPart, `${lastPart}:first-child`);
+        }
+        console.log(selector, $(selector).length);
 
         return selector;
     }
@@ -107,9 +117,10 @@ export default class DOMSearcher {
             nthChild,
         });
 
-        item.children
-            .filter(child => child.text || child.children)
-            .map((child, index) => findPath(newPath, index, child));
+        item.children.forEach((child, index) => {
+            if (!child.text && !child.children) return;
+            findPath(newPath, index, child);
+        });
     }
 
     find(searchFor) {
