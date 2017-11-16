@@ -54,12 +54,10 @@ class DOMSearcher {
         while ($(selector).length > 1 && parts.length > 0) {
             lastPart = parts.pop();
             selector = `${lastPart} > ${selector}`;
-            console.log(selector, $(selector).length);
         }
         if ($(selector).length > 1 && lastPart.indexOf(':nth-child') === -1) {
             selector = selector.replace(lastPart, `${lastPart}:first-child`);
         }
-        console.log(selector, $(selector).length);
 
         return selector;
     }
