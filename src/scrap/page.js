@@ -132,7 +132,10 @@ export default class PageScrapper {
 
             await this.page.goto(url);
 
+            const endIfTimedOut = setTimeout(() => this.call('done', new Date()), 5000);
+
             this.page.waitForNavigation({ waitUntil: 'networkidle', networkIdleTimeout: 2000 });
+
             this.call('loaded', { url, timestamp: new Date() });
 
             const rec = this.requests[this.mainRequestId];
@@ -164,6 +167,7 @@ export default class PageScrapper {
             // Extract list of non-native window properties
             let windowProperties = _.filter(data.allWindowProperties, (propName) => !nativeWindowsProperties[propName]);
             windowProperties = await this.page.evaluate(evalWindowProperties, windowProperties);
+            if (endIfTimedOut) clearTimeout(endIfTimedOut);
             this.closePage();
             this.call('window-properties', windowProperties);
             this.call('done', new Date());

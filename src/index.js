@@ -10,7 +10,6 @@ import parseSchemaOrgData from './parse/schema-org';
 import parseJsonLD from './parse/json-ld';
 import DOMSearcher from './search/DOMSearcher';
 import TreeSearcher from './search/TreeSearcher';
-import CrawlerGenerator from './generate/Crawler';
 import OutputGenerator from './generate/Output';
 import { findCommonAncestors } from './utils';
 
@@ -219,19 +218,7 @@ async function analysePage(browser, url, searchFor) {
         // prevent act from closing before all data is asynchronously parsed and searched
         await waitForEnd(output, 'analysisEnded');
 
-        const crawlerGenerator = new CrawlerGenerator();
-        const crawler = crawlerGenerator.generate(
-            url,
-            {
-                schemaOrg: output.get('schemaOrgDataFound'),
-                metadata: output.get('metaDataFound'),
-                jsonLD: output.get('jsonLDDataFound'),
-                window: output.get('windowPropertiesFound'),
-                html: output.get('htmlFound'),
-            },
-            searchFor,
-        );
-        output.set('crawler', crawler);
+        output.set('crawler', 'crawler is now on frontend');
 
         await waitForEnd(output, 'outputFinished');
     } catch (error) {
@@ -253,7 +240,15 @@ Apify.main(async () => {
             throw new Error('Received invalid input');
         }
 
-        const browser = await puppeteer.launch({ args: ['--no-sandbox'], headless: true });
+        const args = ['--no-sandbox'];
+
+        if (process.env.PROXY_GROUP && process.env.TOKEN) {
+            const { TOKEN, PROXY_GROUP } = process.env;
+            const proxyUrl = `${PROXY_GROUP}:${TOKEN}@proxy.apify.com:8000`;
+            args.push(`--proxy-server="http=http://${proxyUrl}";"https=https://${proxyUrl}"`);
+        }
+
+        const browser = await puppeteer.launch({ args, headless: true });
         await analysePage(browser, input.url, input.searchFor);
     } catch (error) {
         console.log('Top level error');

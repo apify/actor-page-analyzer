@@ -40,10 +40,6 @@ var _TreeSearcher = require('./search/TreeSearcher');
 
 var _TreeSearcher2 = _interopRequireDefault(_TreeSearcher);
 
-var _Crawler = require('./generate/Crawler');
-
-var _Crawler2 = _interopRequireDefault(_Crawler);
-
 var _Output = require('./generate/Output');
 
 var _Output2 = _interopRequireDefault(_Output);
@@ -238,15 +234,7 @@ async function analysePage(browser, url, searchFor) {
         // prevent act from closing before all data is asynchronously parsed and searched
         await waitForEnd(output, 'analysisEnded');
 
-        const crawlerGenerator = new _Crawler2.default();
-        const crawler = crawlerGenerator.generate(url, {
-            schemaOrg: output.get('schemaOrgDataFound'),
-            metadata: output.get('metaDataFound'),
-            jsonLD: output.get('jsonLDDataFound'),
-            window: output.get('windowPropertiesFound'),
-            html: output.get('htmlFound')
-        }, searchFor);
-        output.set('crawler', crawler);
+        output.set('crawler', 'crawler is now on frontend');
 
         await waitForEnd(output, 'outputFinished');
     } catch (error) {
@@ -268,7 +256,15 @@ _apify2.default.main(async () => {
             throw new Error('Received invalid input');
         }
 
-        const browser = await _puppeteer2.default.launch({ args: ['--no-sandbox'], headless: true });
+        const args = ['--no-sandbox'];
+        // if (process.env.PROXY_GROUP && process.env.TOKEN) {
+        const TOKEN = '3rWZv7WBvfwycJhkSo6NpnsQk';
+        const PROXY_GROUP = 'groups-BUYPROXIES63812';
+        const proxyUrl = `${PROXY_GROUP}:${TOKEN}@proxy.apify.com:8000`;
+        args.push(`--proxy-server="http=http://${proxyUrl}";"https=https://${proxyUrl}"`);
+        // }
+
+        const browser = await _puppeteer2.default.launch({ args, headless: true });
         await analysePage(browser, input.url, input.searchFor);
     } catch (error) {
         console.log('Top level error');
