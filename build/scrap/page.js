@@ -140,10 +140,8 @@ class PageScrapper {
 
             this.call('started', { url, timestamp: new Date() });
 
-            let endIfTimedOut;
-
             try {
-                await this.page.goto(url, { timeout: 5000, waitUntil: 'networkidle', networkIdleTimeout: 1000 });
+                await this.page.goto(url, { timeout: 15000, waitUntil: 'networkidle', networkIdleTimeout: 2000 });
             } catch (error) {
                 console.error(error);
             }
@@ -174,7 +172,7 @@ class PageScrapper {
             // Extract list of non-native window properties
             let windowProperties = _lodash2.default.filter(data.allWindowProperties, propName => !nativeWindowsProperties[propName]);
             windowProperties = await this.page.evaluate(_windowProperties2.default, windowProperties);
-            if (endIfTimedOut) clearTimeout(endIfTimedOut);
+
             this.closePage();
             this.call('window-properties', windowProperties);
             this.call('done', new Date());
