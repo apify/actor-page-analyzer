@@ -134,7 +134,7 @@ export default class PageScrapper {
 
             const endIfTimedOut = setTimeout(() => this.call('done', new Date()), 5000);
 
-            this.page.waitForNavigation({ waitUntil: 'networkidle', networkIdleTimeout: 2000 });
+            this.page.waitForNavigation({ timeout: 3000, waitUntil: 'networkidle', networkIdleTimeout: 1000 });
 
             this.call('loaded', { url, timestamp: new Date() });
 
