@@ -52,7 +52,7 @@
     "html-entities": "^1.2.1",
     "html-to-json": "^0.6.0",
     "lodash": "^4.17.4",
-    "puppeteer": "^0.11.0",
+    "puppeteer": "^0.13.0",
     "request": "^2.83.0",
     "type-check": "^0.3.2"
   },

@@ -30,6 +30,7 @@ class OutputGenerator {
             schemaOrgDataParsed: false,
             jsonLDDataParsed: false,
             htmlParsed: false,
+            htmlFullyParsed: false,
             xhrRequestsParsed: false,
             windowProperties: {},
             windowPropertiesFound: [],

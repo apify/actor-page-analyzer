@@ -113,6 +113,12 @@ async function analysePage(browser, url, searchFor) {
             );
             log('schema org searched');
             await output.set('schemaOrgSearched', new Date());
+
+            output.set('htmlParsed', true);
+            const domSearcher = new DOMSearcher({ $ });
+            const foundSelectors = domSearcher.find(searchFor);
+            await output.set('htmlFound', foundSelectors);
+            log('initial html searched');
         } catch (error) {
             console.error('Intitial response parsing failed');
             console.error(error);
@@ -122,8 +128,7 @@ async function analysePage(browser, url, searchFor) {
     scrapper.on('html', async (html) => {
         log('html');
         scrappedData.html = html;
-        output.set('htmlParsed', true);
-        // output.set('html', html);
+        output.set('htmlFullyParsed', true);
         try {
             const $ = cheerio.load(scrappedData.html || '<body></body>');
             const domSearcher = new DOMSearcher({ $ });

@@ -3,7 +3,7 @@ import _ from 'lodash';
 import evalWindowProperties, { getNativeWindowProperties } from '../parse/window-properties';
 import parseResponse from '../parse/xhr-requests';
 
-const IGNORED_EXTENSIONS = ['.css', '.png', '.jpg', '.svg'];
+const IGNORED_EXTENSIONS = ['.css', '.png', '.jpg', '.svg', '.gif'];
 
 const USER_AGENTS = [
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36',
@@ -64,18 +64,15 @@ export default class PageScrapper {
         }
         request.continue();
 
-        if (!this.mainRequestId) {
-            this.mainRequestId = request._requestId;
-        }
-
-        const rec = this.getOrCreateRequestRecord(request._requestId);
+        const rec = this.getOrCreateRequestRecord(request.url);
         rec.url = request.url;
         rec.method = request.method;
         this.call('request', request);
     }
     async onResponse(response) {
         const request = response.request();
-        const rec = this.requests[request._requestId];
+        const rec = this.requests[request.url];
+
         if (!rec) return;
 
         const data = await parseResponse(response);
@@ -83,11 +80,11 @@ export default class PageScrapper {
             rec.responseStatus = data.status;
             rec.responseHeaders = data.headers;
             rec.responseBody = data.body;
-            this.requests[request._requestId] = rec;
+            this.requests[request.url] = rec;
         } else {
-            this.requests[request._requestId] = undefined;
+            this.requests[request.url] = undefined;
         }
-        if (this.mainRequestId === request._requestId) {
+        if (rec.url === this.url) {
             this.call('initial-response', rec);
         } else {
             this.call('response', rec);
@@ -114,12 +111,13 @@ export default class PageScrapper {
         this.requests = {};
         this.mainRequestId = null;
         this.page = null;
+        this.url = url;
 
         try {
             this.page = await this.browser.newPage();
             const agentID = Math.floor(Math.random() * 4);
             await this.page.setUserAgent(USER_AGENTS[agentID]);
-            this.page.setRequestInterceptionEnabled(true);
+            this.page.setRequestInterception(true);
 
             this.page.on('error', this.onPageError);
 
@@ -131,30 +129,31 @@ export default class PageScrapper {
             this.call('started', { url, timestamp: new Date() });
 
             try {
-                await this.page.goto(url, { timeout: 15000, waitUntil: 'networkidle', networkIdleTimeout: 2000 });
+                await this.page.goto(url, { waitUntil: 'networkidle0' });
             } catch (error) {
                 console.error(error);
             }
 
             this.call('loaded', { url, timestamp: new Date() });
 
-            const rec = this.requests[this.mainRequestId];
+            const rec = this.requests[this.url];
 
             if (!rec) {
                 this.closePage();
+                this.call('done', new Date());
                 return;
             }
 
             this.call(
                 'requests',
                 Object.keys(this.requests)
-                    .filter(requestId => {
-                        if (requestId === this.mainRequestId) return false;
-                        if (!this.requests[requestId]) return false;
-                        if (!this.requests[requestId].responseBody) return false;
+                    .filter(requestUrl => {
+                        if (requestUrl === this.url) return false;
+                        if (!this.requests[requestUrl]) return false;
+                        if (!this.requests[requestUrl].responseBody) return false;
                         return true;
                     })
-                    .map(requestId => this.requests[requestId]),
+                    .map(requestUrl => this.requests[requestUrl]),
             );
 
             const data = await this.page.evaluate(() => ({
