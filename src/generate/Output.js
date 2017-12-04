@@ -76,7 +76,7 @@ export default class OutputGenerator {
             if (!done && this.fields.scrappingFinished) {
                 // scrapping finished but window parsing timed out
                 this.fields.analysisEnded = new Date();
-                console.log('done');
+                console.log('done because of timeout');
             }
 
             if (done || this.fields.error || this.fields.pageError) {

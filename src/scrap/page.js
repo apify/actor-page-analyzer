@@ -130,14 +130,12 @@ export default class PageScrapper {
 
             this.call('started', { url, timestamp: new Date() });
 
-            await this.page.goto(url);
-
-            const endIfTimedOut = setTimeout(() => this.call('done', new Date()), 5000);
+            let endIfTimedOut;
 
             try {
-                await this.page.waitForNavigation({ timeout: 5000, waitUntil: 'networkidle', networkIdleTimeout: 500 });
+                await this.page.goto(url, { timeout: 5000, waitUntil: 'networkidle', networkIdleTimeout: 1000 });
             } catch (error) {
-                console.log('Navigation timeout exceeded');
+                console.error(error);
             }
 
             this.call('loaded', { url, timestamp: new Date() });
