@@ -48,6 +48,13 @@ var _utils = require('./utils');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+let lastLog = Date.now();
+const log = message => {
+    const currentLog = Date.now();
+    console.log(`${Math.round((currentLog - lastLog) / 10) / 100}s`, message);
+    lastLog = currentLog;
+};
+
 // Definition of the input
 const INPUT_TYPE = `{
     url: String,
@@ -71,7 +78,7 @@ async function waitForEnd(output, field) {
 
 async function analysePage(browser, url, searchFor) {
     const output = new _Output2.default();
-    console.log('analysisStarted');
+    log('analysisStarted');
     output.set('analysisStarted', new Date());
 
     const scrappedData = {
@@ -81,19 +88,19 @@ async function analysePage(browser, url, searchFor) {
     const scrapper = new _page2.default(browser);
 
     scrapper.on('started', data => {
-        console.log('scrapping started');
+        log('scrapping started');
         scrappedData.loadingStarted = data;
         output.set('scrappingStarted', data.timestamp);
     });
 
     scrapper.on('loaded', data => {
-        console.log('loaded');
+        log('loaded');
         scrappedData.loadingFinished = data;
         output.set('pageNavigated', data.timestamp);
     });
 
     scrapper.on('initial-response', async response => {
-        console.log('initial response');
+        log('initial response');
         output.set('initialResponse', {
             url: response.url,
             status: response.status,
@@ -109,7 +116,7 @@ async function analysePage(browser, url, searchFor) {
             await output.set('metaData', metadata);
             const foundMetadata = treeSearcher.find(metadata, searchFor);
             await output.set('metaDataFound', foundMetadata);
-            console.log('metadata searched');
+            log('metadata searched');
             await output.set('metadataSearched', new Date());
 
             const jsonld = (0, _jsonLd2.default)({ $ });
@@ -118,7 +125,7 @@ async function analysePage(browser, url, searchFor) {
             const foundJsonLD = treeSearcher.find(jsonld, searchFor);
             await output.set('jsonLDDataFound', foundJsonLD);
             await output.set('jsonLDData', (0, _utils.findCommonAncestors)(jsonld, foundJsonLD));
-            console.log('json-ld searched');
+            log('json-ld searched');
             await output.set('jsonLDSearched', new Date());
 
             const schemaOrgData = (0, _schemaOrg2.default)({ $ });
@@ -127,7 +134,7 @@ async function analysePage(browser, url, searchFor) {
             const foundSchemaOrg = treeSearcher.find(schemaOrgData, searchFor);
             await output.set('schemaOrgDataFound', foundSchemaOrg);
             await output.set('schemaOrgData', (0, _utils.findCommonAncestors)(schemaOrgData, foundSchemaOrg));
-            console.log('schema org searched');
+            log('schema org searched');
             await output.set('schemaOrgSearched', new Date());
         } catch (error) {
             console.error('Intitial response parsing failed');
@@ -136,7 +143,7 @@ async function analysePage(browser, url, searchFor) {
     });
 
     scrapper.on('html', async html => {
-        console.log('html');
+        log('html');
         scrappedData.html = html;
         output.set('htmlParsed', true);
         // output.set('html', html);
@@ -149,12 +156,12 @@ async function analysePage(browser, url, searchFor) {
             console.error('HTML search failed');
             console.error(error);
         }
-        console.log('html searched');
+        log('html searched');
         await output.set('htmlSearched', new Date());
     });
 
     scrapper.on('window-properties', async properties => {
-        console.log('window properties');
+        log('window properties');
         scrappedData.windowProperties = properties;
         output.set('windowPropertiesParsed', true);
         output.set('allWindowProperties', properties);
@@ -165,7 +172,7 @@ async function analysePage(browser, url, searchFor) {
             const foundWindowProperties = treeSearcher.find(scrappedData.windowProperties, searchFor);
             output.set('windowPropertiesFound', foundWindowProperties);
             output.set('windowProperties', (0, _utils.findCommonAncestors)(scrappedData.windowProperties, foundWindowProperties, true));
-            console.log('window properties searched');
+            log('window properties searched');
         } catch (error) {
             console.error('Window properties parsing failed');
             console.error(error);
@@ -174,12 +181,12 @@ async function analysePage(browser, url, searchFor) {
     });
 
     scrapper.on('screenshot', data => {
-        console.log('screenshot');
+        log('screenshot');
         output.set('screenshot', data);
     });
 
     scrapper.on('requests', async requests => {
-        console.log('requests');
+        log('requests');
         scrappedData.xhrRequests = requests;
         output.set('xhrRequestsParsed', true);
         output.set('xhrRequests', requests);
@@ -204,27 +211,27 @@ async function analysePage(browser, url, searchFor) {
                 }
             });
             output.set('xhrRequestsFound', xhrRequestResults);
-            console.log('xhrRequests searched');
+            log('xhrRequests searched');
         } catch (err) {
-            console.log('XHR Request search failed');
+            log('XHR Request search failed');
             console.error(err);
         }
         output.set('xhrRequestsSearched', new Date());
     });
 
     scrapper.on('done', data => {
-        console.log('scrapping finished');
+        log('scrapping finished');
         output.set('scrappingFinished', data.timestamp);
     });
 
     scrapper.on('page-error', data => {
-        console.log('page error');
+        log('page error');
         scrappedData.pageError = data;
         output.set('pageError', data);
     });
 
     scrapper.on('error', data => {
-        console.log('error');
+        log('error');
         scrappedData.pageError = data;
         output.set('error', data);
     });
@@ -243,31 +250,31 @@ async function analysePage(browser, url, searchFor) {
 }
 
 _apify2.default.main(async () => {
-    console.log('Analysing url from input');
+    log('Analysing url from input');
     try {
         // Fetch the input and check it has a valid format
         // You don't need to check the input, but it's a good practice.
         const input = await _apify2.default.getValue('INPUT');
         if (!(0, _typeCheck.typeCheck)(INPUT_TYPE, input)) {
-            console.log('Expected input:');
-            console.log(INPUT_TYPE);
-            console.log('Received input:');
+            log('Expected input:');
+            log(INPUT_TYPE);
+            log('Received input:');
             console.dir(input);
             throw new Error('Received invalid input');
         }
 
         const args = ['--no-sandbox'];
-        // if (process.env.PROXY_GROUP && process.env.TOKEN) {
-        const TOKEN = '3rWZv7WBvfwycJhkSo6NpnsQk';
-        const PROXY_GROUP = 'groups-BUYPROXIES63812';
-        const proxyUrl = `${PROXY_GROUP}:${TOKEN}@proxy.apify.com:8000`;
-        args.push(`--proxy-server="http=http://${proxyUrl}";"https=https://${proxyUrl}"`);
-        // }
+
+        if (process.env.PROXY_GROUP && process.env.TOKEN) {
+            const { TOKEN, PROXY_GROUP } = process.env;
+            const proxyUrl = `${PROXY_GROUP}:${TOKEN}@proxy.apify.com:8000`;
+            args.push(`--proxy-server="http=http://${proxyUrl}";"https=https://${proxyUrl}"`);
+        }
 
         const browser = await _puppeteer2.default.launch({ args, headless: true });
         await analysePage(browser, input.url, input.searchFor);
     } catch (error) {
-        console.log('Top level error');
+        log('Top level error');
         console.error(error);
     }
 });
