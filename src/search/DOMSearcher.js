@@ -4,6 +4,46 @@ import { normalize } from '../utils';
 
 const LETTER_DEDUCTION = 0.01;
 
+function findSimilarSelectors($, selectors) {
+    return selectors
+        .map((foundSelector) => {
+            const { selector } = foundSelector;
+            const steps = selector.split(' > ');
+            const options = steps
+                .reduce((lists, step, index) => {
+                    const arrayPart = steps.slice(0, index + 1);
+                    arrayPart[arrayPart.length - 1] = arrayPart[arrayPart.length - 1].replace(/:nth-child\(\d\)/, '');
+                    const arraySelector = arrayPart.join(' > ');
+                    const childSelector = steps.slice(index + 1).join(' > ');
+                    if (!arraySelector || !childSelector) return lists;
+                    const parentElements = $(arraySelector);
+                    const children = parentElements.find(childSelector);
+                    if (children.length > 1) lists.push({ arraySelector, childSelector });
+                    return lists;
+                }, [])
+                .reverse()
+                .map(({ arraySelector, childSelector }) => {
+                    const parentElements = $(arraySelector);
+                    const possibleIndexes = {};
+                    parentElements.each(function (index) {
+                        const child = $(this).find(childSelector);
+                        if (child.length > 0) possibleIndexes[index] = child.text();
+                    });
+                    if (Object.keys(possibleIndexes).length) return { arraySelector, childSelector, possibleIndexes };
+                    return null;
+                })
+                .filter(item => !!item);
+
+            if (options.length) {
+                return {
+                    ...foundSelector,
+                    foundInLists: options,
+                };
+            }
+            return foundSelector;
+        });
+}
+
 export default class DOMSearcher {
     constructor({ $, html }) {
         if (!$ && !html) throw new Error('DOMSearcher requires cheerio instance or HTML code.');
@@ -31,19 +71,20 @@ export default class DOMSearcher {
 
         const parts = importantPartOfPath.map(step => {
             if (step.id) return `#${step.id}`;
-            let classes = step.class ? `.${step.class.split(' ').join('.')}` : '';
+            let classes = step.class && step.class.trim() ? `.${step.class.trim().split(' ').join('.')}` : '';
             // remove bootstrap classes
             classes = classes.replace(/.col-[^.]+-\d+/gi, '');
+            if (classes === '.') classes = undefined;
             let position = '';
             if (step.nthChild === 0) position = '';
             else if (step.nthChild > 0) position = `:nth-child(${step.nthChild + 1})`;
-            return `${step.tag}${classes}${position}`;
+            return `${step.tag}${classes || position}`;
         });
 
 
         let lastPart = parts.pop();
         let selector = lastPart;
-        while ($(selector).length > 1 && parts.length > 0) {
+        while (($(selector).length > 1 || !!lastPart.match(/(.*):nth-child\((.*)\)/) || !!lastPart.match(/^(\w+)$/)) && parts.length > 0) {
             lastPart = parts.pop();
             selector = `${lastPart} > ${selector}`;
         }
@@ -96,7 +137,7 @@ export default class DOMSearcher {
         return elementData;
     }
 
-    findPath(currentPath, nthChild, item) {
+    findPath(currentPath, nthChild, item, siblingClasses = {}) {
         const { findPath, createSelector } = this;
         if (item.text) {
             const selector = createSelector(currentPath, item);
@@ -108,16 +149,25 @@ export default class DOMSearcher {
             return;
         }
 
+        const hasUniqueClass = item.class && siblingClasses[item.class] === 1;
+
         const newPath = concat(currentPath, {
             tag: item.tag,
             id: item.id,
-            class: item.class,
-            nthChild,
+            class: hasUniqueClass ? item.class : undefined,
+            nthChild: !hasUniqueClass ? nthChild : undefined,
         });
+
+        const childrenClasses = item.children.reduce((classes, child) => {
+            if (!child.class) return classes;
+            if (!classes[child.class]) classes[child.class] = 1;
+            else classes[child.class]++;
+            return classes;
+        }, {});
 
         item.children.forEach((child, index) => {
             if (!child.text && !child.children) return;
-            findPath(newPath, index, child);
+            findPath(newPath, index, child, childrenClasses);
         });
     }
 
@@ -141,6 +191,9 @@ export default class DOMSearcher {
             .filter(child => child.text || child.children)
             .forEach((child, index) => findPath([], index, child));
 
-        return sortBy(this.foundPaths, ['score']).map(({ selector, text }) => ({ selector, text }));
+        const sortedSelectors = sortBy(this.foundPaths, ['score']).map(({ selector, text }) => ({ selector, text }));
+        const selectorsWithDetails = findSimilarSelectors($, sortedSelectors);
+        console.log(selectorsWithDetails);
+        return selectorsWithDetails;
     }
 }

@@ -1,0 +1,57 @@
+
+> apify-page-analyzer@0.0.1 start-local /Library/WebServer/Weby/act-page-analyzer
+> npm run build && APIFY_DEV_KEY_VALUE_STORE_DIR=./kv-store-dev/ node build/index.js
+
+
+> apify-page-analyzer@0.0.1 build /Library/WebServer/Weby/act-page-analyzer
+> npm run clean && babel src --out-dir build
+
+
+> apify-page-analyzer@0.0.1 clean /Library/WebServer/Weby/act-page-analyzer
+> rm -rf build
+
+src/generate/Crawler.js -> build/generate/Crawler.js
+src/generate/Output.js -> build/generate/Output.js
+src/index.js -> build/index.js
+src/parse/json-ld.js -> build/parse/json-ld.js
+src/parse/metadata.js -> build/parse/metadata.js
+src/parse/schema-org.js -> build/parse/schema-org.js
+src/parse/window-properties.js -> build/parse/window-properties.js
+src/parse/xhr-requests.js -> build/parse/xhr-requests.js
+src/scrap/act.js -> build/scrap/act.js
+src/scrap/page.js -> build/scrap/page.js
+src/search/DOMSearcher.js -> build/search/DOMSearcher.js
+src/search/TreeSearcher.js -> build/search/TreeSearcher.js
+src/templates/PageFunction.js -> build/templates/PageFunction.js
+src/templates/crawler.js -> build/templates/crawler.js
+src/templates/jsonLDCrawler.js -> build/templates/jsonLDCrawler.js
+src/utils.js -> build/utils.js
+0s Analysing url from input
+0.16s analysisStarted
+0.1s scrapping started
+0.96s initial response
+0.13s metadata searched
+0s json-ld searched
+0.18s schema org searched
+[ { arrayPath: [ 'div.plot_summary', 'div:nth-child(4)', 'span:nth-child(2)' ],
+    childPath: [ 'a', 'span.itemprop' ] },
+  { arrayPath: [ 'div.plot_summary', 'div:nth-child(4)' ],
+    childPath: [ 'span:nth-child(2)', 'a', 'span.itemprop' ] } ]
+[ { arrayPath: [ 'table.cast_list', 'tbody', 'tr:nth-child(2)' ],
+    childPath: [ 'td.itemprop', 'a', 'span.itemprop' ] } ]
+0.03s initial html searched
+3.76s loaded
+0s requests
+0.16s xhrRequests searched
+0.03s html
+[ { arrayPath: [ 'div.plot_summary', 'div:nth-child(4)', 'span:nth-child(2)' ],
+    childPath: [ 'a', 'span.itemprop' ] },
+  { arrayPath: [ 'div.plot_summary', 'div:nth-child(4)' ],
+    childPath: [ 'span:nth-child(2)', 'a', 'span.itemprop' ] } ]
+[ { arrayPath: [ 'table.cast_list', 'tbody', 'tr:nth-child(2)' ],
+    childPath: [ 'td.itemprop', 'a', 'span.itemprop' ] } ]
+0.07s html searched
+0.01s window properties
+0s window properties searched
+done
+0s scrapping finished

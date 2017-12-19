@@ -90,7 +90,7 @@ class OutputGenerator {
         }
 
         if (this.writeTimeout) clearTimeout(this.writeTimeout);
-        this.writeTimeout = setTimeout(this.writeOutput, 300);
+        this.writeTimeout = setTimeout(this.writeOutput, 100);
     }
 }
 exports.default = OutputGenerator;
