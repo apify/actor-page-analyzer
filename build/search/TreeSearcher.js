@@ -77,7 +77,7 @@ function findSimilarPaths(data, paths) {
                 childPath: childPath.join('.'),
                 possibleIndexes
             };
-        }).filter(item => item !== null && Object.keys(item.possibleIndexes).length > 0);
+        }).filter(item => item !== null && Object.keys(item.possibleIndexes).length > 1);
         if (arrayOptions.length > 0) {
             return _extends({}, foundPath, {
                 foundInLists: arrayOptions

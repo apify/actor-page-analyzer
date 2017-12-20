@@ -136,7 +136,6 @@ export default class TreeSearcher {
             value: foundPath.value,
         }));
         const sortedPathsWithDetails = findSimilarPaths(data, sortedPaths);
-        console.log(sortedPathsWithDetails);
         return sortedPathsWithDetails;
     }
 }

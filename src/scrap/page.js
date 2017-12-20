@@ -84,6 +84,15 @@ export default class PageScrapper {
         } else {
             this.requests[request.url] = undefined;
         }
+        if (rec.url === this.url && rec.responseStatus === 301) {
+            const newLocation = rec.responseHeaders.location;
+            const isRelative = !newLocation.startsWith('http');
+            if (!isRelative) this.url = newLocation;
+            else {
+                const newUrl = this.url.replace(/(http:\/\/[^/]*).*/, `$1${newLocation}`);
+                this.url = newUrl;
+            }
+        }
         if (rec.url === this.url) {
             this.call('initial-response', rec);
         } else {

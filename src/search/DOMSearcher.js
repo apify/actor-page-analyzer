@@ -193,7 +193,6 @@ export default class DOMSearcher {
 
         const sortedSelectors = sortBy(this.foundPaths, ['score']).map(({ selector, text }) => ({ selector, text }));
         const selectorsWithDetails = findSimilarSelectors($, sortedSelectors);
-        console.log(selectorsWithDetails);
         return selectorsWithDetails;
     }
 }
