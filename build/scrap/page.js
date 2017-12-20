@@ -102,7 +102,6 @@ class PageScrapper {
                 this.url = newUrl;
             }
         }
-        // console.log('response', rec.url.substr(0, 50), rec.responseStatus);
         if (rec.url === this.url) {
             this.call('initial-response', rec);
         } else {

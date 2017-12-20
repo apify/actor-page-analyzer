@@ -84,11 +84,13 @@ export default class DOMSearcher {
 
         let lastPart = parts.pop();
         let selector = lastPart;
-        while (($(selector).length > 1 || !!lastPart.match(/(.*):nth-child\((.*)\)/) || !!lastPart.match(/^(\w+)$/)) && parts.length > 0) {
+        let options = $(selector);
+        while ((options.length > 1 || !!lastPart.match(/(.*):nth-child\((.*)\)/) || !!lastPart.match(/^(\w+)$/)) && parts.length > 0) {
             lastPart = parts.pop();
             selector = `${lastPart} > ${selector}`;
+            options = $(selector);
         }
-        if ($(selector).length > 1 && lastPart.indexOf(':nth-child') === -1) {
+        if (options.length > 1 && lastPart.indexOf(':nth-child') === -1) {
             selector = selector.replace(lastPart, `${lastPart}:first-child`);
         }
 
