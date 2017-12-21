@@ -27,19 +27,19 @@ src/templates/crawler.js -> build/templates/crawler.js
 src/templates/jsonLDCrawler.js -> build/templates/jsonLDCrawler.js
 src/utils.js -> build/utils.js
 0s Analysing url from input
-0.2s analysisStarted
+0.16s analysisStarted
 0.1s scrapping started
-2.52s initial response
-0.36s metadata searched
-0.01s json-ld searched
-0.25s schema org searched
-2.01s initial html searched
-5.16s loaded
+0.2s initial response
+0.03s metadata searched
+0s json-ld searched
+0s schema org searched
+0s initial html searched
+4.33s loaded
 0s requests
-0.04s xhrRequests searched
-0.12s html
-6.26s html searched
-0.07s window properties
-0.01s window properties searched
+0.08s xhrRequests searched
+0.01s html
+0.12s html searched
+0.06s window properties
+0.02s window properties searched
 done
 0s scrapping finished

@@ -108,7 +108,7 @@ export default class DOMSearcher {
             }
             selector = `${step.tag}`;
             if ($(selector).length === 1) return selector;
-            if (step.classes) return `${step.tag}.${step.classes}`;
+            if (step.classes) return `${step.tag}.${step.classes.join('.')}`;
             return `${step.tag}${step.position}`;
         };
 
