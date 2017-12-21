@@ -27,31 +27,19 @@ src/templates/crawler.js -> build/templates/crawler.js
 src/templates/jsonLDCrawler.js -> build/templates/jsonLDCrawler.js
 src/utils.js -> build/utils.js
 0s Analysing url from input
-0.16s analysisStarted
+0.2s analysisStarted
 0.1s scrapping started
-0.96s initial response
-0.13s metadata searched
-0s json-ld searched
-0.18s schema org searched
-[ { arrayPath: [ 'div.plot_summary', 'div:nth-child(4)', 'span:nth-child(2)' ],
-    childPath: [ 'a', 'span.itemprop' ] },
-  { arrayPath: [ 'div.plot_summary', 'div:nth-child(4)' ],
-    childPath: [ 'span:nth-child(2)', 'a', 'span.itemprop' ] } ]
-[ { arrayPath: [ 'table.cast_list', 'tbody', 'tr:nth-child(2)' ],
-    childPath: [ 'td.itemprop', 'a', 'span.itemprop' ] } ]
-0.03s initial html searched
-3.76s loaded
+2.52s initial response
+0.36s metadata searched
+0.01s json-ld searched
+0.25s schema org searched
+2.01s initial html searched
+5.16s loaded
 0s requests
-0.16s xhrRequests searched
-0.03s html
-[ { arrayPath: [ 'div.plot_summary', 'div:nth-child(4)', 'span:nth-child(2)' ],
-    childPath: [ 'a', 'span.itemprop' ] },
-  { arrayPath: [ 'div.plot_summary', 'div:nth-child(4)' ],
-    childPath: [ 'span:nth-child(2)', 'a', 'span.itemprop' ] } ]
-[ { arrayPath: [ 'table.cast_list', 'tbody', 'tr:nth-child(2)' ],
-    childPath: [ 'td.itemprop', 'a', 'span.itemprop' ] } ]
-0.07s html searched
-0.01s window properties
-0s window properties searched
+0.04s xhrRequests searched
+0.12s html
+6.26s html searched
+0.07s window properties
+0.01s window properties searched
 done
 0s scrapping finished

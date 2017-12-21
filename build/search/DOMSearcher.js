@@ -24,7 +24,7 @@ function findSimilarSelectors($, selectors) {
         const steps = selector.split(' > ');
         const options = steps.reduce((lists, step, index) => {
             const arrayPart = steps.slice(0, index + 1);
-            arrayPart[arrayPart.length - 1] = arrayPart[arrayPart.length - 1].replace(/:nth-child\(\d\)/, '');
+            arrayPart[arrayPart.length - 1] = arrayPart[arrayPart.length - 1].replace(/:nth-of-type\(\d\)/, '');
             const arraySelector = arrayPart.join(' > ');
             const childSelector = steps.slice(index + 1).join(' > ');
             if (!arraySelector || !childSelector) return lists;
@@ -75,27 +75,58 @@ class DOMSearcher {
 
         const importantPartOfPath = lastUsableID !== -1 ? completePath.slice(lastUsableID) : completePath;
 
-        const parts = importantPartOfPath.map(step => {
-            if (step.id) return `#${step.id}`;
+        const parts = importantPartOfPath.map((step, i) => {
             let classes = step.class && step.class.trim() ? `.${step.class.trim().split(' ').join('.')}` : '';
-            // remove bootstrap classes
-            classes = classes.replace(/.col-[^.]+-\d+/gi, '');
-            if (classes === '.') classes = undefined;
-            let position = '';
-            if (step.nthChild === 0) position = '';else if (step.nthChild > 0) position = `:nth-child(${step.nthChild + 1})`;
-            return `${step.tag}${classes || position}`;
+            // remove bootstrap column classes
+            classes = classes.replace(/\.col-[^.]+-\d+/gi, '');
+            // remove even/odd classes
+            classes = classes.replace(/\.even/gi, '').replace(/\.odd/gi, '');
+            if (classes === '.' || classes === '') classes = undefined;
+            return {
+                id: step.id,
+                tag: step.tag,
+                classes: classes ? classes.substr(1).split('.') : undefined,
+                position: step.nthChild || i === importantPartOfPath.length - 1 ? `:nth-of-type(${(step.nthChild || 0) + 1})` : ''
+            };
         });
 
+        const getSelector = step => {
+            let selector;
+            if (step.id) {
+                selector = `#${step.id}`;
+                if ($(selector).length === 1) return selector;
+            }
+            if (step.classes) {
+                selector = step.classes.reduce((uniqueSelector, stepClass) => {
+                    if (uniqueSelector) return uniqueSelector;
+
+                    let classSelector = `.${stepClass}`;
+                    if ($(classSelector).length === 1) return classSelector;
+
+                    classSelector = `${step.tag}.${stepClass}`;
+                    if ($(classSelector).length === 1) return classSelector;
+
+                    return false;
+                }, false);
+                if (selector) return selector;
+                selector = `${step.tag}.${step.classes.join('.')}`;
+                if ($(selector).length === 1) return selector;
+            }
+            selector = `${step.tag}`;
+            if ($(selector).length === 1) return selector;
+            if (step.classes) return `${step.tag}.${step.classes}`;
+            return `${step.tag}${step.position}`;
+        };
+
         let lastPart = parts.pop();
-        let selector = lastPart;
+        let partialSelector = getSelector(lastPart, true);
+        let selector = partialSelector;
         let options = $(selector);
-        while ((options.length > 1 || !!lastPart.match(/(.*):nth-child\((.*)\)/) || !!lastPart.match(/^(\w+)$/)) && parts.length > 0) {
+        while ((options.length > 1 || !!partialSelector.match(/(.*):nth-of-type\((.*)\)/) || !!partialSelector.match(/^(\w+)$/)) && parts.length > 0) {
             lastPart = parts.pop();
-            selector = `${lastPart} > ${selector}`;
+            partialSelector = getSelector(lastPart);
+            selector = `${partialSelector} > ${selector}`;
             options = $(selector);
-        }
-        if (options.length > 1 && lastPart.indexOf(':nth-child') === -1) {
-            selector = selector.replace(lastPart, `${lastPart}:first-child`);
         }
 
         return selector;
@@ -143,10 +174,10 @@ class DOMSearcher {
         return elementData;
     }
 
-    findPath(currentPath, nthChild, item, siblingClasses = {}) {
+    findPath(currentPath, nthChild, item, siblings = 0, siblingClasses = {}) {
         const { findPath, createSelector } = this;
         if (item.text) {
-            const selector = createSelector(currentPath, item);
+            const selector = createSelector(currentPath, item, siblings);
             this.foundPaths.push({
                 selector,
                 text: item.text,
@@ -155,24 +186,27 @@ class DOMSearcher {
             return;
         }
 
-        const hasUniqueClass = item.class && siblingClasses[item.class] === 1;
+        const uniqueClasses = item.class && item.class.split(' ').filter(itemClass => siblingClasses[itemClass] <= 1).join(' ');
 
         const newPath = (0, _lodash.concat)(currentPath, {
             tag: item.tag,
             id: item.id,
-            class: hasUniqueClass ? item.class : undefined,
-            nthChild: !hasUniqueClass ? nthChild : undefined
+            class: uniqueClasses || undefined,
+            nthChild: !uniqueClasses ? nthChild : undefined
         });
 
         const childrenClasses = item.children.reduce((classes, child) => {
             if (!child.class) return classes;
-            if (!classes[child.class]) classes[child.class] = 1;else classes[child.class]++;
+            const childClasses = child.class.split(' ');
+            childClasses.forEach(childClass => {
+                if (!classes[childClass]) classes[childClass] = 1;else classes[childClass]++;
+            });
             return classes;
         }, {});
 
         item.children.forEach((child, index) => {
             if (!child.text && !child.children) return;
-            findPath(newPath, index, child, childrenClasses);
+            findPath(newPath, index, child, item.children.length - 1, childrenClasses);
         });
     }
 
