@@ -24,7 +24,7 @@ function findSimilarSelectors($, selectors) {
         const steps = selector.split(' > ');
         const options = steps.reduce((lists, step, index) => {
             const arrayPart = steps.slice(0, index + 1);
-            arrayPart[arrayPart.length - 1] = arrayPart[arrayPart.length - 1].replace(/:nth-of-type\(\d\)/, '');
+            arrayPart[arrayPart.length - 1] = arrayPart[arrayPart.length - 1].replace(/:nth-of-type\(\d+\)/, '');
             const arraySelector = arrayPart.join(' > ');
             const childSelector = steps.slice(index + 1).join(' > ');
             if (!arraySelector || !childSelector) return lists;
@@ -33,6 +33,7 @@ function findSimilarSelectors($, selectors) {
             if (children.length > 1) lists.push({ arraySelector, childSelector });
             return lists;
         }, []).reverse().map(({ arraySelector, childSelector }) => {
+            console.log(arraySelector, childSelector);
             const parentElements = $(arraySelector);
             const possibleIndexes = {};
             parentElements.each(function (index) {

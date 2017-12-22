@@ -12,7 +12,7 @@ function findSimilarSelectors($, selectors) {
             const options = steps
                 .reduce((lists, step, index) => {
                     const arrayPart = steps.slice(0, index + 1);
-                    arrayPart[arrayPart.length - 1] = arrayPart[arrayPart.length - 1].replace(/:nth-of-type\(\d\)/, '');
+                    arrayPart[arrayPart.length - 1] = arrayPart[arrayPart.length - 1].replace(/:nth-of-type\(\d+\)/, '');
                     const arraySelector = arrayPart.join(' > ');
                     const childSelector = steps.slice(index + 1).join(' > ');
                     if (!arraySelector || !childSelector) return lists;
