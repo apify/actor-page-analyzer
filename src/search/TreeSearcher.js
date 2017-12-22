@@ -8,7 +8,7 @@ function traverseTree(root, path) {
     path.forEach(step => {
         if (step === '') return;
         if (step.indexOf('[') !== -1) {
-            const match = step.match(/^(.*)\[(\d*)\]$/);
+            const match = step.match(/^(.*)\[(\d+)\]$/);
             const field = match[1];
             const position = Number(match[2]);
             if (isString(field) && !!field) {
