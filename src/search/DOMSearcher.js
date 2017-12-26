@@ -4,6 +4,55 @@ import { normalize } from '../utils';
 
 const LETTER_DEDUCTION = 0.01;
 
+const findUniqueSelector = ($, item, parentSelector = '') => {
+    let uniqueSelector = '';
+    const pSelector = parentSelector ? `${parentSelector} > ` : '';
+    if (item.attr('id')) {
+        uniqueSelector = `${pSelector}${item.get(0).tagName}[id='${item.attr('id')}']`;
+        return uniqueSelector;
+    }
+    let localSelector = '';
+    let classes = item.attr('class') || null;
+    if (classes) {
+        classes = classes.split(' ');
+        classes.forEach((stepClass) => {
+            if (uniqueSelector) return;
+            localSelector = `${pSelector}${item.tagName}.${stepClass}`;
+            if ($(localSelector).length === 1) {
+                uniqueSelector = localSelector;
+            }
+        });
+        if (uniqueSelector) return uniqueSelector;
+        localSelector = `${pSelector}${item.tagName}.${classes.join('.')}`;
+        if ($(localSelector).length === 1) return localSelector;
+    }
+    return false;
+};
+
+function createFullSelector($, item) {
+    const completePath = item.parentsUntil('body');
+    const pathTillUnique = [];
+    let foundUnique = false;
+    completePath.each(function () {
+        if (foundUnique) return;
+        const step = $(this);
+        pathTillUnique.push(step);
+        foundUnique = findUniqueSelector($, step);
+    }, []);
+    pathTillUnique.unshift(item);
+    const path = pathTillUnique.reverse().reduce((partialPath, step, index) => {
+        if (index === 0 && foundUnique) {
+            return foundUnique;
+        } else if (index === 0) {
+            return step.get(0).tagName;
+        }
+        const uniquePath = findUniqueSelector($, step, partialPath);
+        if (uniquePath) return uniquePath;
+        return `${partialPath} > ${step.get(0).tagName}`;
+    }, '');
+    return path;
+}
+
 function findSimilarSelectors($, selectors) {
     return selectors
         .map((foundSelector) => {
@@ -33,6 +82,27 @@ function findSimilarSelectors($, selectors) {
                     return null;
                 })
                 .filter(item => !!item);
+
+            // if selector contains id, use only the tag and check if it returns list
+            if (options.length === 0 && steps[0].indexOf('[id=') !== -1) {
+                const localSteps = [...steps];
+                localSteps[0] = localSteps[0].replace(/(.+)\[.+/, '$1');
+                const localSelector = localSteps.join(' > ');
+                const parents = $(steps[0]).parent();
+                const items = parents.find(localSelector);
+                if (items.length > 1) {
+                    const parentSelector = createFullSelector($, parents);
+                    const arraySelector = `${parentSelector} > ${localSteps[0]}`;
+                    const childSelector = localSteps.slice(1).join(' > ');
+                    const parentElements = $(arraySelector);
+                    const possibleIndexes = {};
+                    parentElements.each(function (index) {
+                        const child = $(this).find(childSelector);
+                        if (child.length > 0) possibleIndexes[index] = child.text();
+                    });
+                    if (Object.keys(possibleIndexes).length) options.push({ arraySelector, childSelector, possibleIndexes });
+                }
+            }
 
             if (options.length) {
                 return {
@@ -87,7 +157,7 @@ export default class DOMSearcher {
         const getSelector = (step) => {
             let selector;
             if (step.id) {
-                selector = `#${step.id}`;
+                selector = `${step.tag}[id='${step.id}']`;
                 if ($(selector).length === 1) return selector;
             }
             if (step.classes) {

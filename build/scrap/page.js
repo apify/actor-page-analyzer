@@ -28,6 +28,7 @@ class PageScrapper {
         this.requests = {};
         this.handlers = {};
         this.mainRequestId = null;
+        this.initialResponse = null;
 
         this.on = this.on.bind(this);
         this.call = this.call.bind(this);
@@ -78,6 +79,10 @@ class PageScrapper {
         rec.url = request.url;
         rec.method = request.method;
         this.call('request', request);
+
+        if (rec.url === this.url || rec.url.replace(this.url, '') === '/') {
+            this.initialResponse = rec;
+        }
     }
     async onResponse(response) {
         const request = response.request();
@@ -102,7 +107,8 @@ class PageScrapper {
                 this.url = newUrl;
             }
         }
-        if (rec.url === this.url) {
+        if (rec.url === this.url || rec.url.replace(this.url, '') === '/') {
+            this.initialResponse = rec;
             this.call('initial-response', rec);
         } else {
             this.call('response', rec);
@@ -154,7 +160,7 @@ class PageScrapper {
 
             this.call('loaded', { url, timestamp: new Date() });
 
-            const rec = this.requests[this.url];
+            const rec = this.initialResponse;
 
             if (!rec) {
                 this.closePage();
@@ -163,7 +169,7 @@ class PageScrapper {
             }
 
             this.call('requests', Object.keys(this.requests).filter(requestUrl => {
-                if (requestUrl === this.url) return false;
+                if (requestUrl === this.initialResponse.url) return false;
                 if (!this.requests[requestUrl]) return false;
                 if (!this.requests[requestUrl].responseBody) return false;
                 return true;

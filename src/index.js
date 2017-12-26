@@ -180,6 +180,12 @@ async function analysePage(browser, url, searchFor) {
         output.set('xhrRequestsParsed', true);
         output.set('xhrRequests', requests);
 
+        if (!requests.length) {
+            output.set('xhrRequestsFound', []);
+            output.set('xhrRequestsSearched', new Date());
+            return;
+        }
+
         try {
             const treeSearcher = new TreeSearcher();
             const xhrRequestResults = [];
