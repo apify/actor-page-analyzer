@@ -58,7 +58,7 @@ function findSimilarSelectors($, selectors) {
         .map((foundSelector) => {
             const { selector } = foundSelector;
             const steps = selector.split(' > ');
-            const options = steps
+            let options = steps
                 .reduce((lists, step, index) => {
                     const arrayPart = steps.slice(0, index + 1);
                     arrayPart[arrayPart.length - 1] = arrayPart[arrayPart.length - 1].replace(/:nth-of-type\(\d+\)/, '');
@@ -78,7 +78,7 @@ function findSimilarSelectors($, selectors) {
                         const child = $(this).find(childSelector);
                         if (child.length > 0) possibleIndexes[index] = child.text();
                     });
-                    if (Object.keys(possibleIndexes).length) return { arraySelector, childSelector, possibleIndexes };
+                    if (Object.keys(possibleIndexes).length > 1) return { arraySelector, childSelector, possibleIndexes };
                     return null;
                 })
                 .filter(item => !!item);
@@ -92,15 +92,33 @@ function findSimilarSelectors($, selectors) {
                 const items = parents.find(localSelector);
                 if (items.length > 1) {
                     const parentSelector = createFullSelector($, parents);
-                    const arraySelector = `${parentSelector} > ${localSteps[0]}`;
-                    const childSelector = localSteps.slice(1).join(' > ');
-                    const parentElements = $(arraySelector);
-                    const possibleIndexes = {};
-                    parentElements.each(function (index) {
-                        const child = $(this).find(childSelector);
-                        if (child.length > 0) possibleIndexes[index] = child.text();
-                    });
-                    if (Object.keys(possibleIndexes).length) options.push({ arraySelector, childSelector, possibleIndexes });
+                    const fullSelector = `${parentSelector} > ${localSteps.join(' > ')}`;
+                    const fullSteps = fullSelector.split(' > ');
+                    options = fullSteps
+                        .reduce((lists, step, index) => {
+                            const arrayPart = fullSteps.slice(0, index + 1);
+                            if (arrayPart[arrayPart.length - 1].indexOf('nth-of-type') !== -1) return lists;
+
+                            const arraySelector = arrayPart.join(' > ');
+                            const childSelector = fullSteps.slice(index + 1).join(' > ');
+                            if (!arraySelector || !childSelector) return lists;
+                            const parentElements = $(arraySelector);
+                            const children = parentElements.find(childSelector);
+                            if (children.length > 1) lists.push({ arraySelector, childSelector });
+                            return lists;
+                        }, [])
+                        .reverse()
+                        .map(({ arraySelector, childSelector }) => {
+                            const parentElements = $(arraySelector);
+                            const possibleIndexes = {};
+                            parentElements.each(function (index) {
+                                const child = $(this).find(childSelector);
+                                if (child.length > 0) possibleIndexes[index] = child.text();
+                            });
+                            if (Object.keys(possibleIndexes).length > 1) return { arraySelector, childSelector, possibleIndexes };
+                            return null;
+                        })
+                        .filter(item => !!item);
                 }
             }
 
