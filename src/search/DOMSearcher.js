@@ -61,7 +61,7 @@ function findSimilarSelectors($, selectors) {
             let options = steps
                 .reduce((lists, step, index) => {
                     const arrayPart = steps.slice(0, index + 1);
-                    arrayPart[arrayPart.length - 1] = arrayPart[arrayPart.length - 1].replace(/:nth-of-type\(\d+\)/, '');
+                    arrayPart[arrayPart.length - 1] = arrayPart[arrayPart.length - 1].replace(/:nth-child\(\d+\)/, '');
                     const arraySelector = arrayPart.join(' > ');
                     const childSelector = steps.slice(index + 1).join(' > ');
                     if (!arraySelector || !childSelector) return lists;
@@ -97,7 +97,7 @@ function findSimilarSelectors($, selectors) {
                     options = fullSteps
                         .reduce((lists, step, index) => {
                             const arrayPart = fullSteps.slice(0, index + 1);
-                            if (arrayPart[arrayPart.length - 1].indexOf('nth-of-type') !== -1) return lists;
+                            if (arrayPart[arrayPart.length - 1].indexOf('nth-child') !== -1) return lists;
 
                             const arraySelector = arrayPart.join(' > ');
                             const childSelector = fullSteps.slice(index + 1).join(' > ');
@@ -168,7 +168,7 @@ export default class DOMSearcher {
                 id: step.id,
                 tag: step.tag,
                 classes: classes ? classes.substr(1).split('.') : undefined,
-                position: step.nthChild || i === importantPartOfPath.length - 1 ? `:nth-of-type(${(step.nthChild || 0) + 1})` : '',
+                position: step.nthChild || i === importantPartOfPath.length - 1 ? `:nth-child(${(step.nthChild || 0) + 1})` : '',
             };
         });
 
@@ -207,7 +207,7 @@ export default class DOMSearcher {
         while (
             (
                 options.length > 1 ||
-                !!partialSelector.match(/(.*):nth-of-type\((.*)\)/) ||
+                !!partialSelector.match(/(.*):nth-child\((.*)\)/) ||
                 !!partialSelector.match(/^(\w+)$/)
             ) && parts.length > 0
         ) {
@@ -250,8 +250,9 @@ export default class DOMSearcher {
         const children = [];
         let hasViableChild = false;
         $element.children().each(function () {
+            const index = $(this).prevAll(this.tagName).length || 0;
             const result = searchElement(this.tagName, $(this));
-            children.push(result);
+            children.push({ ...result, index });
             if (result.text || result.children) hasViableChild = true;
         });
         if (hasViableChild) {
@@ -262,7 +263,7 @@ export default class DOMSearcher {
         return elementData;
     }
 
-    findPath(currentPath, nthChild, item, siblings = 0, siblingClasses = {}) {
+    findPath(currentPath, item, siblings = 0, siblingClasses = {}) {
         const { findPath, createSelector } = this;
         if (item.text) {
             const selector = createSelector(currentPath, item, siblings);
@@ -280,7 +281,7 @@ export default class DOMSearcher {
             tag: item.tag,
             id: item.id,
             class: uniqueClasses || undefined,
-            nthChild: !uniqueClasses ? nthChild : undefined,
+            nthChild: !uniqueClasses ? item.index : undefined,
         });
 
         const childrenClasses = item.children.reduce((classes, child) => {
@@ -293,9 +294,9 @@ export default class DOMSearcher {
             return classes;
         }, {});
 
-        item.children.forEach((child, index) => {
+        item.children.forEach((child) => {
             if (!child.text && !child.children) return;
-            findPath(newPath, index, child, item.children.length - 1, childrenClasses);
+            findPath(newPath, child, item.children.length - 1, childrenClasses);
         });
     }
 
@@ -317,7 +318,7 @@ export default class DOMSearcher {
                 return searchElement(this.tagName, $(this));
             }).get()
             .filter(child => child.text || child.children)
-            .forEach((child, index) => findPath([], index, child));
+            .forEach((child) => findPath([], child));
 
         const sortedSelectors = sortBy(this.foundPaths, ['score']).map(({ selector, text }) => ({ selector, text }));
         const selectorsWithDetails = findSimilarSelectors($, sortedSelectors);
