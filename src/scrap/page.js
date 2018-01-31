@@ -12,6 +12,13 @@ const USER_AGENTS = [
     'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko',
 ];
 
+const PAGE_EVALUATE_TIMEOUT = 10 * 1000;
+
+const promiseWithTimeout = (promise, timeout) => Promise.race([
+    promise,
+    new Promise((resolve, reject) => setTimeout(reject, timeout)),
+]);
+
 export default class PageScrapper {
     constructor(browser) {
         this.browser = browser;
@@ -56,7 +63,7 @@ export default class PageScrapper {
     onRequest(request) {
         const ignore = IGNORED_EXTENSIONS.reduce((ignored, extension) => {
             if (ignored) return ignored;
-            return request.url.endsWith(extension);
+            return request.url().endsWith(extension);
         }, false);
 
         if (ignore) {
@@ -65,9 +72,9 @@ export default class PageScrapper {
         }
         request.continue();
 
-        const rec = this.getOrCreateRequestRecord(request.url);
-        rec.url = request.url;
-        rec.method = request.method;
+        const rec = this.getOrCreateRequestRecord(request.url());
+        rec.url = request.url();
+        rec.method = request.method();
         this.call('request', request);
 
         if (rec.url === this.url || rec.url.replace(this.url, '') === '/') {
@@ -76,19 +83,21 @@ export default class PageScrapper {
     }
     async onResponse(response) {
         const request = response.request();
-        const rec = this.requests[request.url];
+        const rec = this.requests[request.url()];
 
         if (!rec) return;
 
         const data = await parseResponse(response);
+
         if (!data.ignore) {
             rec.responseStatus = data.status;
             rec.responseHeaders = data.headers;
             rec.responseBody = data.body;
-            this.requests[request.url] = rec;
+            this.requests[rec.url] = rec;
         } else {
-            this.requests[request.url] = undefined;
+            this.requests[rec.url] = undefined;
         }
+
         if (rec.url === this.url && rec.responseStatus === 301) {
             const newLocation = rec.responseHeaders.location;
             const isRelative = !newLocation.startsWith('http');
@@ -132,7 +141,9 @@ export default class PageScrapper {
             this.page = await this.browser.newPage();
             const agentID = Math.floor(Math.random() * 4);
             await this.page.setUserAgent(USER_AGENTS[agentID]);
+
             this.page.setRequestInterception(true);
+            this.page.setDefaultNavigationTimeout(20 * 1000); // navigation timeout of 10s
 
             this.page.on('error', this.onPageError);
 
@@ -144,8 +155,9 @@ export default class PageScrapper {
             this.call('started', { url, timestamp: new Date() });
 
             try {
-                await this.page.goto(url, { waitUntil: 'networkidle0' });
+                await this.page.goto(url, { waitUntil: 'networkidle2' });
             } catch (error) {
+                this.call('error', error);
                 console.error(error);
             }
 
@@ -171,19 +183,39 @@ export default class PageScrapper {
                     .map(requestUrl => this.requests[requestUrl]),
             );
 
-            const data = await this.page.evaluate(() => ({
-                html: document.documentElement.innerHTML, // eslint-disable-line
-                allWindowProperties: Object.keys(window), // eslint-disable-line
-            }));
+            try {
+                const { html } = await promiseWithTimeout(
+                    this.page.evaluate(() => ({
+                        html: document.documentElement.innerHTML, // eslint-disable-line
+                    })),
+                    PAGE_EVALUATE_TIMEOUT,
+                );
+                this.call('html', html);
+            } catch (error) {
+                this.call('error', { message: 'HTML Load timed out', error });
+                console.error(error);
+            }
 
-            this.call('html', data.html);
-
-            // Extract list of non-native window properties
-            let windowProperties = _.filter(data.allWindowProperties, (propName) => !nativeWindowsProperties[propName]);
-            windowProperties = await this.page.evaluate(evalWindowProperties, windowProperties);
+            try {
+                const { allWindowProperties } = await promiseWithTimeout(
+                    this.page.evaluate(() => ({
+                        allWindowProperties: Object.keys(window), // eslint-disable-line
+                    })),
+                    PAGE_EVALUATE_TIMEOUT,
+                );
+                // Extract list of non-native window properties
+                let windowProperties = _.filter(allWindowProperties, (propName) => !nativeWindowsProperties[propName]);
+                windowProperties = await promiseWithTimeout(
+                    this.page.evaluate(evalWindowProperties, windowProperties),
+                    PAGE_EVALUATE_TIMEOUT,
+                );
+                this.call('window-properties', windowProperties);
+            } catch (error) {
+                this.call('error', { message: 'Get window properties timed out', error });
+                console.error(error);
+            }
 
             this.closePage();
-            this.call('window-properties', windowProperties);
             this.call('done', new Date());
         } catch (e) {
             this.call('error', `Loading of web page failed (${url}): ${e}`);

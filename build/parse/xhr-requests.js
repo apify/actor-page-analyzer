@@ -26,8 +26,8 @@ async function parseJSONResponse(response) {
 
 exports.default = async function parseResponse(response) {
     const result = {};
-    result.status = response.status;
-    result.headers = response.headers;
+    result.status = response.status();
+    result.headers = response.headers();
 
     // ignore body if request failed remove this optimization if you want to store
     // errors too
@@ -35,7 +35,7 @@ exports.default = async function parseResponse(response) {
         return result;
     }
 
-    const contentType = response.headers['content-type'];
+    const contentType = result.headers['content-type'];
     const valueableType = VALUABLE_CONTENT_TYPES.filter(ct => contentType && contentType.indexOf(ct) !== -1);
     // ignore body if it's not important
     if (!valueableType.length) {

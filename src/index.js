@@ -3,6 +3,7 @@ import cheerio from 'cheerio';
 import Apify from 'apify';
 import { typeCheck } from 'type-check';
 import { isString } from 'lodash';
+import { anonymizeProxy, closeAnonymizedProxy } from 'proxy-chain';
 
 import PageScrapper from './scrap/page';
 import parseMetadata from './parse/metadata';
@@ -14,6 +15,7 @@ import OutputGenerator from './generate/Output';
 import { findCommonAncestors } from './utils';
 
 let lastLog = Date.now();
+
 const log = (message) => {
     const currentLog = Date.now();
     console.log(`${Math.round((currentLog - lastLog) / 10) / 100}s`, message);
@@ -265,7 +267,6 @@ Apify.main(async () => {
             const proxyUrl = `${PROXY_GROUP}:${TOKEN}@proxy.apify.com:8000`;
             args.push(`--proxy-server="http=http://${proxyUrl}";"https=https://${proxyUrl}"`);
         }
-
         const browser = await puppeteer.launch({ args, headless: true });
         await analysePage(browser, input.url, input.searchFor);
     } catch (error) {

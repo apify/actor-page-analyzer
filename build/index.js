@@ -16,6 +16,8 @@ var _typeCheck = require('type-check');
 
 var _lodash = require('lodash');
 
+var _proxyChain = require('proxy-chain');
+
 var _page = require('./scrap/page');
 
 var _page2 = _interopRequireDefault(_page);
@@ -49,6 +51,7 @@ var _utils = require('./utils');
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 let lastLog = Date.now();
+
 const log = message => {
     const currentLog = Date.now();
     console.log(`${Math.round((currentLog - lastLog) / 10) / 100}s`, message);
@@ -281,7 +284,6 @@ _apify2.default.main(async () => {
             const proxyUrl = `${PROXY_GROUP}:${TOKEN}@proxy.apify.com:8000`;
             args.push(`--proxy-server="http=http://${proxyUrl}";"https=https://${proxyUrl}"`);
         }
-
         const browser = await _puppeteer2.default.launch({ args, headless: true });
         await analysePage(browser, input.url, input.searchFor);
     } catch (error) {
