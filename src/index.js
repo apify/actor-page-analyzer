@@ -241,6 +241,10 @@ async function analysePage(browser, url, searchFor) {
         output.set('crawler', 'crawler is now on frontend');
 
         await waitForEnd(output, 'outputFinished');
+        // wait till all async actions are done
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        // force last write of output data
+        await output.writeOutput();
     } catch (error) {
         console.error(error);
     }

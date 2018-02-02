@@ -12,7 +12,7 @@ const USER_AGENTS = [
     'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko',
 ];
 
-const PAGE_EVALUATE_TIMEOUT = 10 * 1000;
+const PAGE_EVALUATE_TIMEOUT = 20 * 1000;
 
 const promiseWithTimeout = (promise, timeout) => Promise.race([
     promise,
@@ -217,7 +217,6 @@ export default class PageScrapper {
 
             this.closePage();
             this.call('done', new Date());
-            await new Promise(resolve => setTimeout(resolve, 5000));
         } catch (e) {
             this.call('error', `Loading of web page failed (${url}): ${e}`);
             this.closePage();
