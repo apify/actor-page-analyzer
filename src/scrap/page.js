@@ -217,6 +217,7 @@ export default class PageScrapper {
 
             this.closePage();
             this.call('done', new Date());
+            await new Promise(resolve => setTimeout(resolve, 5000));
         } catch (e) {
             this.call('error', `Loading of web page failed (${url}): ${e}`);
             this.closePage();
