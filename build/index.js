@@ -54,7 +54,7 @@ let lastLog = Date.now();
 
 const log = message => {
     const currentLog = Date.now();
-    console.log(`${Math.round((currentLog - lastLog) / 10) / 100}s`, message);
+    console.log(new Date(), `${Math.round((currentLog - lastLog) / 10) / 100}s`, message);
     lastLog = currentLog;
 };
 
@@ -261,6 +261,7 @@ async function analysePage(browser, url, searchFor) {
         // wait till all async actions are done
         await new Promise(resolve => setTimeout(resolve, 5000));
         // force last write of output data
+        log('Force write of output with await');
         await output.writeOutput();
     } catch (error) {
         console.error(error);
@@ -290,6 +291,7 @@ _apify2.default.main(async () => {
         }
         const browser = await _puppeteer2.default.launch({ args, headless: true });
         await analysePage(browser, input.url, input.searchFor);
+        log('Analyse page finished');
     } catch (error) {
         log('Top level error');
         console.error(error);

@@ -22,7 +22,7 @@ const IGNORED_EXTENSIONS = ['.css', '.png', '.jpg', '.svg', '.gif'];
 
 const USER_AGENTS = ['Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.75 Safari/537.36', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_1) AppleWebKit/604.3.5 (KHTML, like Gecko) Version/11.0.1 Safari/604.3.5', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:56.0) Gecko/20100101 Firefox/56.0', 'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko'];
 
-const PAGE_EVALUATE_TIMEOUT = 10 * 1000;
+const PAGE_EVALUATE_TIMEOUT = 20 * 1000;
 
 const promiseWithTimeout = (promise, timeout) => Promise.race([promise, new Promise((resolve, reject) => setTimeout(reject, timeout))]);
 
