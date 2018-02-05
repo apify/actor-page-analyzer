@@ -22,12 +22,12 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/apifier/act-page-analyzer"
+    "url": "git+https://github.com/apifytech/act-page-analyzer"
   },
   "bugs": {
-    "url": "https://github.com/apifier/act-page-analyzer/issues"
+    "url": "https://github.com/apifytech/act-page-analyzer/issues"
   },
-  "homepage": "https://github.com/apifier/act-page-analyzer",
+  "homepage": "https://github.com/apifytech/act-page-analyzer",
   "files": [
     "build"
   ],
@@ -58,7 +58,7 @@
     "type-check": "^0.3.2"
   },
   "devDependencies": {
-    "apify-jsdoc-template": "github:Apifier/apify-jsdoc-template",
+    "apify-jsdoc-template": "github:apifytech/apify-jsdoc-template",
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.0",
     "babel-eslint": "^8.0.1",
