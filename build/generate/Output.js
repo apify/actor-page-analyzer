@@ -65,9 +65,7 @@ class OutputGenerator {
     async writeOutput() {
         const data = JSON.stringify(this.fields, null, 2);
         try {
-            log('Writting output');
             await _apify2.default.setValue('OUTPUT', data, { contentType: 'application/json' });
-            log('Written output');
             if (this.fields.crawler) this.fields.outputFinished = true;
         } catch (error) {
             console.error('could not save output');

@@ -259,7 +259,7 @@ async function analysePage(browser, url, searchFor) {
 
         await waitForEnd(output, 'outputFinished');
         // wait till all async actions are done
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        // await new Promise(resolve => setTimeout(resolve, 5000));
         // force last write of output data
         log('Force write of output with await');
         await output.writeOutput();
