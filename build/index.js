@@ -287,7 +287,7 @@ _apify2.default.main(async () => {
             const { TOKEN, PROXY_GROUP } = process.env;
             const proxyUrl = `http://${PROXY_GROUP}:${TOKEN}@proxy.apify.com:8000`;
             const anonProxy = await (0, _proxyChain.anonymizeProxy)(proxyUrl);
-            args.push(`--proxy-server="http=${anonProxy}";"https=${anonProxy}"`);
+            args.push(`--proxy-server=${anonProxy}`);
         }
         const browser = await _puppeteer2.default.launch({ args, headless: true });
         await analysePage(browser, input.url, input.searchFor);
