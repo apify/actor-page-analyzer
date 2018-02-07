@@ -98,15 +98,15 @@ export default class PageScrapper {
             this.requests[rec.url] = undefined;
         }
 
-        const possibleBaseUrls = [this.url];
-        const hashIndex = this.url.indexOf('#');
+        let possibleBaseUrls = [this.url];
+        let hashIndex = this.url.indexOf('#');
         if (hashIndex !== -1) {
             possibleBaseUrls.push(this.url.substr(0, hashIndex));
         }
 
-        const isBaseUrl = possibleBaseUrls.indexOf(rec.url) !== -1;
+        let isBaseUrl = possibleBaseUrls.indexOf(rec.url) !== -1;
 
-        if (isBaseUrl && rec.responseStatus === 301) {
+        if (isBaseUrl && rec.responseStatus >= 300 && rec.responseStatus < 400) {
             const newLocation = rec.responseHeaders.location;
             const isRelative = !newLocation.startsWith('http');
             if (!isRelative) this.url = newLocation;
@@ -114,6 +114,14 @@ export default class PageScrapper {
                 const newUrl = this.url.replace(/(http:\/\/[^/]*).*/, `$1${newLocation}`);
                 this.url = newUrl;
             }
+
+            // regenerate urls if we performed redirect
+            possibleBaseUrls = [this.url];
+            hashIndex = this.url.indexOf('#');
+            if (hashIndex !== -1) {
+                possibleBaseUrls.push(this.url.substr(0, hashIndex));
+            }
+            isBaseUrl = possibleBaseUrls.indexOf(rec.url) !== -1;
         }
 
         const isBaseUrlWithSlash = possibleBaseUrls
