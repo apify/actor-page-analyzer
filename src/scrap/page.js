@@ -98,7 +98,15 @@ export default class PageScrapper {
             this.requests[rec.url] = undefined;
         }
 
-        if (rec.url === this.url && rec.responseStatus === 301) {
+        const possibleBaseUrls = [this.url];
+        const hashIndex = this.url.indexOf('#');
+        if (hashIndex !== -1) {
+            possibleBaseUrls.push(this.url.substr(0, hashIndex));
+        }
+
+        const isBaseUrl = possibleBaseUrls.indexOf(rec.url) !== -1;
+
+        if (isBaseUrl && rec.responseStatus === 301) {
             const newLocation = rec.responseHeaders.location;
             const isRelative = !newLocation.startsWith('http');
             if (!isRelative) this.url = newLocation;
@@ -107,7 +115,13 @@ export default class PageScrapper {
                 this.url = newUrl;
             }
         }
-        if (rec.url === this.url || rec.url.replace(this.url, '') === '/') {
+
+        const isBaseUrlWithSlash = possibleBaseUrls
+            .map((baseUrl) => rec.url.replace(baseUrl, ''))
+            .filter((remainder) => remainder === '/')
+            .length > 0;
+
+        if (isBaseUrl || isBaseUrlWithSlash) {
             this.initialResponse = rec;
             this.call('initial-response', rec);
         } else {
@@ -167,7 +181,7 @@ export default class PageScrapper {
 
             if (!rec) {
                 this.closePage();
-                this.call('done', new Date());
+                this.call('done', { timestamp: new Date() });
                 return;
             }
 
