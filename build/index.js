@@ -113,6 +113,7 @@ async function analysePage(browser, url, searchFor) {
         const html = response.responseBody;
         const treeSearcher = new _TreeSearcher2.default();
         try {
+            log(`start of html: ${html && html.substr && html.substr(0, 500)}`);
             const $ = _cheerio2.default.load(html);
             const metadata = (0, _metadata2.default)({ $ });
             await output.set('metaDataParsed', true);
