@@ -110,8 +110,6 @@ async function analysePage(browser, url, searchFor) {
             headers: response.responseHeaders
         });
 
-        console.log(response);
-
         const html = response.responseBody;
         const treeSearcher = new _TreeSearcher2.default();
         try {
@@ -254,7 +252,8 @@ async function analysePage(browser, url, searchFor) {
     });
 
     try {
-        await scrapper.start(url);
+        const fullUrl = url.match(/^http(s)?:\/\//i) ? url : `http://${url}`;
+        await scrapper.start(fullUrl);
         // prevent act from closing before all data is asynchronously parsed and searched
         await waitForEnd(output, 'analysisEnded');
 

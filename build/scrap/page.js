@@ -112,8 +112,9 @@ class PageScrapper {
         }
 
         let isBaseUrl = possibleBaseUrls.indexOf(rec.url) !== -1;
+        let isBaseUrlWithSlash = possibleBaseUrls.map(baseUrl => rec.url.replace(baseUrl, '')).filter(remainder => remainder === '/').length > 0;
 
-        if (isBaseUrl && rec.responseStatus >= 300 && rec.responseStatus < 400) {
+        if ((isBaseUrl || isBaseUrlWithSlash) && rec.responseStatus >= 300 && rec.responseStatus < 400) {
             const newLocation = rec.responseHeaders.location;
             const isRelative = !newLocation.startsWith('http');
             if (!isRelative) this.url = newLocation;else {
@@ -130,7 +131,7 @@ class PageScrapper {
             isBaseUrl = possibleBaseUrls.indexOf(rec.url) !== -1;
         }
 
-        const isBaseUrlWithSlash = possibleBaseUrls.map(baseUrl => rec.url.replace(baseUrl, '')).filter(remainder => remainder === '/').length > 0;
+        isBaseUrlWithSlash = possibleBaseUrls.map(baseUrl => rec.url.replace(baseUrl, '')).filter(remainder => remainder === '/').length > 0;
 
         if (isBaseUrl || isBaseUrlWithSlash) {
             this.initialResponse = rec;
