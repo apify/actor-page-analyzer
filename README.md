@@ -3,11 +3,11 @@
 Apify act to analyze content of url. It extracts HTML and javascript variables from main response and HTML/JSON data from XHR requests.
 Then it analyses loaded data:
 1) It performs analysis of initial HTML (html loaded directly from response):
-    a) Looks for Schema.org data and if it finds anything, it saves it to output as ``schemaOrgData`` variable.
-    b) Looks for JSON-LD link tags and parses found JSON, if it finds anything it outputs it as ``jsonLDData`` variable.
-    c) Looks for ``meta`` and ``title`` tags and outputs found content as ``metadata`` variable.
+- Looks for Schema.org data and if it finds anything, it saves it to output as ``schemaOrgData`` variable.
+- Looks for JSON-LD link tags and parses found JSON, if it finds anything it outputs it as ``jsonLDData`` variable.
+- Looks for ``meta`` and ``title`` tags and outputs found content as ``metadata`` variable.
 2) Loads all XHR requests -> discards request that do no contain HTML or JSON -> parses HTML and JSON into objects
-3) When all XHR requests are finished it loads HTML from the rendered page (it might have changed thanks to JS manipulation) and does steps 1-a,b,c again, to see if it can find something new.
+3) When all XHR requests are finished it loads HTML from the rendered page (it might have changed thanks to JS manipulation) and does work from step 1 again because javascript might have changed the HTML of the website.
 4) loads all window variables and discards common global variables (console, innerHeight, navigator, ...), cleans the output (removes all functions and circular paths) and outputs it as ``allWindowProperties`` variable.
 
 When analysis is finished it checks INPUT parameters if there are any strings to search for and if there are. Then it attempts to find the strings in all found content.
