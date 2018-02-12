@@ -7,3 +7,4 @@ test.log
 crawer.js
 yarn.lock
 npm-debug.log
+*.log
