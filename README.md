@@ -1,6 +1,6 @@
 # act-page-analyzer
 
-Apify act to analyze content of url. It extracts HTML and javascript variables from main response and HTML/JSON data from XHR requests.
+Apify act to analyze content of url. You can try out how it's output can be used in our [Page Analyzer](https://www.apify.com/page-analyzer). It extracts HTML and javascript variables from main response and HTML/JSON data from XHR requests.
 Then it analyses loaded data:
 1) It performs analysis of initial HTML (html loaded directly from response):
 - Looks for Schema.org data and if it finds anything, it saves it to output as ``schemaOrgData`` variable.
@@ -8,7 +8,7 @@ Then it analyses loaded data:
 - Looks for ``meta`` and ``title`` tags and outputs found content as ``metadata`` variable.
 2) Loads all XHR requests -> discards request that do no contain HTML or JSON -> parses HTML and JSON into objects
 3) When all XHR requests are finished it loads HTML from the rendered page (it might have changed thanks to JS manipulation) and does work from step 1 again because javascript might have changed the HTML of the website.
-4) loads all window variables and discards common global variables (console, innerHeight, navigator, ...), cleans the output (removes all functions and circular paths) and outputs it as ``allWindowProperties`` variable.
+4) Loads all window variables and discards common global variables (console, innerHeight, navigator, ...), cleans the output (removes all functions and circular paths) and outputs it as ``allWindowProperties`` variable.
 
 When analysis is finished it checks INPUT parameters if there are any strings to search for and if there are. Then it attempts to find the strings in all found content.
 
@@ -31,7 +31,7 @@ and provide input as a file in directory ``kv-store-dev``.
 }
 ```
 
-During the act run, it saves output into OUTPUT file, which is either saved in key value store if the act is run through Apify, or in ``kv-store-dev`` folder if act is run localy.
+During the act run, it saves output into OUTPUT file, which is saved in key value store if the act is run through Apify, or in ``kv-store-dev`` folder if act is run localy.
 
 **OUTPUT**
 ```javascript
