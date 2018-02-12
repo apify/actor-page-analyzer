@@ -1,6 +1,7 @@
 # act-page-analyzer
 
-Apify act to analyze content of url. You can try out how it's output can be used in our [Page Analyzer](https://www.apify.com/page-analyzer). It extracts HTML and javascript variables from main response and HTML/JSON data from XHR requests.
+Apify act to analyze content of url. You can try out how it's output can be used in our [Page Analyzer](https://www.apify.com/page-analyzer).
+This act extracts HTML and javascript variables from main response and HTML/JSON data from XHR requests.
 Then it analyses loaded data:
 1) It performs analysis of initial HTML (html loaded directly from response):
 - Looks for Schema.org data and if it finds anything, it saves it to output as ``schemaOrgData`` variable.
