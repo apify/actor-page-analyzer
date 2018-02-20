@@ -44,7 +44,7 @@
     "lint": "eslint src test"
   },
   "dependencies": {
-    "apify": "^0.4.32",
+    "apify": "^0.5.4",
     "async": "^2.5.0",
     "bluebird": "^3.5.1",
     "cheerio": "^1.0.0-rc.2",

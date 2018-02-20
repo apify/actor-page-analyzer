@@ -19,9 +19,46 @@ const promiseWithTimeout = (promise, timeout) => Promise.race([
     new Promise((resolve, reject) => setTimeout(reject, timeout)),
 ]);
 
+/**
+ * Takes input http://<hostname>/<path>?<query>#<location> and outputs
+ * array containing up to 8 urls:
+ * http://<hostname>/<path>?<query>#<location>,
+ * http://<hostname>/<path>?<query>,
+ * http://<hostname>/<path>#<location>,
+ * http://<hostname>/<path>,
+ * http://<hostname>/<path>/?<query>#<location>,
+ * http://<hostname>/<path>/?<query>,
+ * http://<hostname>/<path>/#<location>,
+ * http://<hostname>/<path>/
+ */
+function getValidUrls(url) {
+    const possibleBaseUrls = [];
+    const [path, location] = url.split('#');
+    const [baseUrl, query] = path.split('?');
+    // remove ending slash
+    const baseUrlWithoutSlash = baseUrl.replace(/^(.*)\/$/, '$1');
+    const baseUrlVariations = [baseUrlWithoutSlash];
+    if (baseUrl !== baseUrlWithoutSlash) baseUrlVariations.push(baseUrl);
+    else baseUrlVariations.push(`${baseUrlWithoutSlash}/`);
+    baseUrlVariations.forEach(variation => {
+        if (query && location) {
+            possibleBaseUrls.push(`${variation}?${query}#${location}`);
+        }
+        if (query) {
+            possibleBaseUrls.push(`${variation}?${query}`);
+        }
+        if (location) {
+            possibleBaseUrls.push(`${variation}#${location}`);
+        }
+        possibleBaseUrls.push(variation);
+    });
+    return possibleBaseUrls;
+}
+
 export default class PageScrapper {
-    constructor(browser) {
+    constructor(browser, tests) {
         this.browser = browser;
+        this.tests = tests;
         this.requests = {};
         this.handlers = {};
         this.mainRequestId = null;
@@ -98,19 +135,11 @@ export default class PageScrapper {
             this.requests[rec.url] = undefined;
         }
 
-        let possibleBaseUrls = [this.url];
-        let hashIndex = this.url.indexOf('#');
-        if (hashIndex !== -1) {
-            possibleBaseUrls.push(this.url.substr(0, hashIndex));
-        }
+        let possibleBaseUrls = getValidUrls(this.url);
 
-        let isBaseUrl = possibleBaseUrls.indexOf(rec.url) !== -1;
-        let isBaseUrlWithSlash = possibleBaseUrls
-            .map((baseUrl) => rec.url.replace(baseUrl, ''))
-            .filter((remainder) => remainder === '/')
-            .length > 0;
+        let matchesBaseUrls = possibleBaseUrls.indexOf(rec.url) !== -1;
 
-        if ((isBaseUrl || isBaseUrlWithSlash) && rec.responseStatus >= 300 && rec.responseStatus < 400) {
+        if (matchesBaseUrls && rec.responseStatus >= 300 && rec.responseStatus < 400) {
             const newLocation = rec.responseHeaders.location;
             const isRelative = !newLocation.startsWith('http');
             if (!isRelative) this.url = newLocation;
@@ -120,20 +149,12 @@ export default class PageScrapper {
             }
 
             // regenerate urls if we performed redirect
-            possibleBaseUrls = [this.url];
-            hashIndex = this.url.indexOf('#');
-            if (hashIndex !== -1) {
-                possibleBaseUrls.push(this.url.substr(0, hashIndex));
-            }
-            isBaseUrl = possibleBaseUrls.indexOf(rec.url) !== -1;
+            possibleBaseUrls = getValidUrls(this.url);
         }
 
-        isBaseUrlWithSlash = possibleBaseUrls
-            .map((baseUrl) => rec.url.replace(baseUrl, ''))
-            .filter((remainder) => remainder === '/')
-            .length > 0;
+        matchesBaseUrls = possibleBaseUrls.indexOf(rec.url) !== -1;
 
-        if (isBaseUrl || isBaseUrlWithSlash) {
+        if (matchesBaseUrls) {
             this.initialResponse = rec;
             this.call('initial-response', rec);
         } else {
@@ -173,8 +194,10 @@ export default class PageScrapper {
 
             this.page.on('error', this.onPageError);
 
-            const nativeWindowsProperties = await getNativeWindowProperties(this.page);
-
+            let nativeWindowsProperties = {};
+            if (this.tests.includes('WINDOW')) {
+                nativeWindowsProperties = await getNativeWindowProperties(this.page);
+            }
             this.page.on('request', this.onRequest);
             this.page.on('response', this.onResponse);
 
@@ -197,17 +220,24 @@ export default class PageScrapper {
                 return;
             }
 
-            this.call(
-                'requests',
-                Object.keys(this.requests)
-                    .filter(requestUrl => {
-                        if (requestUrl === this.initialResponse.url) return false;
-                        if (!this.requests[requestUrl]) return false;
-                        if (!this.requests[requestUrl].responseBody) return false;
-                        return true;
-                    })
-                    .map(requestUrl => this.requests[requestUrl]),
-            );
+            if (this.tests.includes('XHR')) {
+                this.call(
+                    'requests',
+                    Object.keys(this.requests)
+                        .filter(requestUrl => {
+                            if (requestUrl === this.initialResponse.url) return false;
+                            if (!this.requests[requestUrl]) return false;
+                            if (!this.requests[requestUrl].responseBody) return false;
+                            return true;
+                        })
+                        .map(requestUrl => this.requests[requestUrl]),
+                );
+            } else {
+                this.call(
+                    'requests',
+                    [],
+                );
+            }
 
             try {
                 const { html } = await promiseWithTimeout(
@@ -223,19 +253,23 @@ export default class PageScrapper {
             }
 
             try {
-                const { allWindowProperties } = await promiseWithTimeout(
-                    this.page.evaluate(() => ({
-                        allWindowProperties: Object.keys(window), // eslint-disable-line
-                    })),
-                    PAGE_EVALUATE_TIMEOUT,
-                );
-                // Extract list of non-native window properties
-                let windowProperties = _.filter(allWindowProperties, (propName) => !nativeWindowsProperties[propName]);
-                windowProperties = await promiseWithTimeout(
-                    this.page.evaluate(evalWindowProperties, windowProperties),
-                    PAGE_EVALUATE_TIMEOUT,
-                );
-                this.call('window-properties', windowProperties);
+                if (this.tests.includes('WINDOW')) {
+                    const { allWindowProperties } = await promiseWithTimeout(
+                        this.page.evaluate(() => ({
+                            allWindowProperties: Object.keys(window), // eslint-disable-line
+                        })),
+                        PAGE_EVALUATE_TIMEOUT,
+                    );
+                    // Extract list of non-native window properties
+                    let windowProperties = _.filter(allWindowProperties, (propName) => !nativeWindowsProperties[propName]);
+                    windowProperties = await promiseWithTimeout(
+                        this.page.evaluate(evalWindowProperties, windowProperties),
+                        PAGE_EVALUATE_TIMEOUT,
+                    );
+                    this.call('window-properties', windowProperties);
+                } else {
+                    this.call('window-properties', {});
+                }
             } catch (error) {
                 this.call('error', { message: 'Get window properties timed out', error });
                 console.error(error);

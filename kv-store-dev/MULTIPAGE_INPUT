@@ -7,7 +7,6 @@
                 "3486 Mission St",
                 "11:00 am - 2:30 pm"
             ],
-            "tests": ["HTML"]
         },
         {
             "url": "https://www.alza.cz/samsung-galaxy-a3-2017",
@@ -24,5 +23,6 @@
                 "Ryan Gosling"
             ]
         }
-    ]
+    ],
+    "tests": ["SCHEMA.ORG", "JSON-LD", "WINDOW", "XHR", "META", "HTML"]
 }
