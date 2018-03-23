@@ -1,27 +1,9 @@
 {
     "pages": [
         {
-            "url": "https://www.yelp.com/biz/cuisine-of-nepal-san-francisco",
+            "url": "https://www.horizon.tv/cs_cz/filmy-serialy/vod-asset.html/crid%3A~~2F~~2Fupc.cz~~2F7003~~2FBF-7003-0452-package/vrada-kuciaka-martin-imeka.html",
             "searchFor": [
-                "Cuisine of Nepal",
-                "3486 Mission St",
-                "11:00 am - 2:30 pm"
-            ],
-            "tests": ["HTML"]
-        },
-        {
-            "url": "https://www.alza.cz/samsung-galaxy-a3-2017",
-            "searchFor": [
-                "Samsung Galaxy A3"
-            ],
-            "tests": ["HTML"]
-        },
-        {
-            "url": "http://www.imdb.com/title/tt1856101/",
-            "searchFor": [
-                "Blade Runner 2049",
-                "8.5",
-                "Ryan Gosling"
+                "Vražda Kuciaka"
             ]
         }
     ]

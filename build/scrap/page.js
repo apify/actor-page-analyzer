@@ -237,6 +237,7 @@ class PageScrapper {
             }
 
             try {
+                await new Promise(resolve => setTimeout(resolve, 10000));
                 const { html } = await promiseWithTimeout(this.page.evaluate(() => ({
                     html: document.documentElement.innerHTML // eslint-disable-line
                 })), PAGE_EVALUATE_TIMEOUT);

@@ -93,6 +93,8 @@ async function analysePage(browser, url, searchFor, tests) {
         const html = response.responseBody;
         const treeSearcher = new TreeSearcher();
 
+        await Apify.setValue('html', html, { contentType: 'text/html' });
+
         try {
             log(`start of html: ${html && html.substr && html.substr(0, 500)}`);
             const $ = cheerio.load(html);
