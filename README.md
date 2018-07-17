@@ -1,7 +1,7 @@
 # act-page-analyzer
 
-Apify act to analyze content of url. You can try out how it's output can be used in our [Page Analyzer](https://www.apify.com/page-analyzer).
-This act extracts HTML and javascript variables from main response and HTML/JSON data from XHR requests.
+Apify actor to analyze content of url. You can try out how it's output can be used in our [Page Analyzer](https://www.apify.com/page-analyzer).
+This actor extracts HTML and javascript variables from main response and HTML/JSON data from XHR requests.
 Then it analyses loaded data:
 1) It performs analysis of initial HTML (html loaded directly from response):
 - Looks for Schema.org data and if it finds anything, it saves it to output as ``schemaOrgData`` variable.
@@ -13,9 +13,9 @@ Then it analyses loaded data:
 
 When analysis is finished it checks INPUT parameters if there are any strings to search for and if there are. Then it attempts to find the strings in all found content.
 
-The act ends when all output is parsed and searched. If connection to URL fails or if any part of act crashes, the act ends with error in output and log.
+The actor ends when all output is parsed and searched. If connection to URL fails or if any part of the actor crashes, the actor ends with error in output and log.
 
-Input to act is provided from INPUT file. If the act is run through Apify, then INPUT comes from key value store. If you want to start the act localy, then call
+Input to actor is provided from INPUT file. If the actor is run through Apify, then INPUT comes from key value store. If you want to start the actor localy, then call
 
 ```
 npm run start-local
@@ -32,7 +32,7 @@ and provide input as a file in directory ``kv-store-dev``.
 }
 ```
 
-During the act run, it saves output into OUTPUT file, which is saved in key value store if the act is run through Apify, or in ``kv-store-dev`` folder if act is run localy.
+During the actor run, it saves output into OUTPUT file, which is saved in key value store if the actor is run through Apify, or in ``kv-store-dev`` folder if the actor is run localy.
 
 **OUTPUT**
 ```javascript
@@ -109,9 +109,9 @@ During the act run, it saves output into OUTPUT file, which is saved in key valu
   ],
   // same list as above, but filtered by search strings
   "xhrRequestsFound": [...],
-  // contains error if act failed outside of page function
+  // contains error if actor failed outside of page function
   "error": null,
-  // contains error if act failed in page.evaluate
+  // contains error if actor failed in page.evaluate
   "pageError": null,
   "outputFinished": true,
 
