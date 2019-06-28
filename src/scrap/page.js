@@ -191,7 +191,7 @@ class PageScrapper {
             await this.page.setUserAgent(USER_AGENTS[agentID]);
 
             this.page.setRequestInterception(true);
-            this.page.setDefaultNavigationTimeout(20 * 1000); // navigation timeout of 10s
+            this.page.setDefaultNavigationTimeout(30 * 1000); // navigation timeout of 30s
 
             this.page.on('error', this.onPageError);
 
