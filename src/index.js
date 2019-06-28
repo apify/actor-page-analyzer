@@ -1,19 +1,16 @@
-import puppeteer from 'puppeteer';
-import cheerio from 'cheerio';
-import Apify from 'apify';
-import Promise from 'bluebird';
-import { typeCheck } from 'type-check';
-import { isString } from 'lodash';
-import { anonymizeProxy } from 'proxy-chain';
+const cheerio = require('cheerio');
+const Apify = require('apify');
+const { typeCheck } = require('type-check');
+const { isString } = require('lodash');
 
-import PageScrapper from './scrap/page';
-import parseMetadata from './parse/metadata';
-import parseSchemaOrgData from './parse/schema-org';
-import parseJsonLD from './parse/json-ld';
-import DOMSearcher from './search/DOMSearcher';
-import TreeSearcher from './search/TreeSearcher';
-import OutputGenerator from './generate/Output';
-import { findCommonAncestors } from './utils';
+const PageScrapper = require('./scrap/page');
+const parseMetadata = require('./parse/metadata');
+const parseSchemaOrgData = require('./parse/schema-org');
+const parseJsonLD = require('./parse/json-ld');
+const DOMSearcher = require('./search/DOMSearcher');
+const TreeSearcher = require('./search/TreeSearcher');
+const OutputGenerator = require('./generate/Output');
+const { findCommonAncestors } = require('./utils');
 
 let lastLog = Date.now();
 
@@ -335,18 +332,24 @@ Apify.main(async () => {
         const tests = input.tests || ['SCHEMA.ORG', 'JSON-LD', 'WINDOW', 'XHR', 'META', 'HTML'];
         output = new OutputGenerator(tests);
 
-        const args = ['--no-sandbox'];
-        if (process.env.PROXY_GROUP && process.env.TOKEN) {
-            const { TOKEN, PROXY_GROUP } = process.env;
-            const proxyUrl = `http://${PROXY_GROUP}:${TOKEN}@proxy.apify.com:8000`;
-            const anonProxy = await anonymizeProxy(proxyUrl);
-            args.push(`--proxy-server=${anonProxy}`);
-        }
-        const browser = await puppeteer.launch({ args, headless: true });
+        const launchPuppeteerOptions = {
+            stealth: true,
+            headless: true,
+        };
 
-        await Promise.mapSeries(input.pages, (pageToAnalyze) => {
-            return analysePage(browser, pageToAnalyze.url, pageToAnalyze.searchFor, pageToAnalyze.tests || tests);
-        });
+        if (process.env.PROXY_GROUP && process.env.PROXY_PASSWORD) {
+            const { PROXY_PASSWORD, PROXY_GROUP, PROXY_ADDRESS } = process.env;
+            const proxyAddress = PROXY_ADDRESS || 'proxy.apify.com:8000';
+            launchPuppeteerOptions.proxyUrl = `http://groups-${PROXY_GROUP}:${PROXY_PASSWORD}@${proxyAddress}`;
+        }
+        const browser = await Apify.launchPuppeteer(launchPuppeteerOptions);
+
+        let pageToAnalyze = null;
+        for (let i = 0; i < input.pages.length; i++) {
+            pageToAnalyze = input.pages[i];
+            // eslint-disable-next-line no-await-in-loop
+            await analysePage(browser, pageToAnalyze.url, pageToAnalyze.searchFor, pageToAnalyze.tests || tests);
+        }
 
         log('Analyzer finished');
     } catch (error) {

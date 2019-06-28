@@ -1,6 +1,6 @@
-import cheerio from 'cheerio';
+const cheerio = require('cheerio');
 
-export default function parseMetadata({ html, $ }) {
+function parseMetadata({ html, $ }) {
     if (!$) {
         $ = cheerio.load(html);
     }
@@ -18,3 +18,5 @@ export default function parseMetadata({ html, $ }) {
 
     return result;
 }
+
+module.exports = parseMetadata;

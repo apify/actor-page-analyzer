@@ -1,7 +1,7 @@
-import _ from 'lodash';
+const _ = require('lodash');
 
-import evalWindowProperties, { getNativeWindowProperties } from '../parse/window-properties';
-import parseResponse from '../parse/xhr-requests';
+const { evalWindowProperties, getNativeWindowProperties } = require('../parse/window-properties');
+const parseResponse = require('../parse/xhr-requests');
 
 const IGNORED_EXTENSIONS = ['.css', '.png', '.jpg', '.svg', '.gif'];
 
@@ -55,7 +55,7 @@ function getValidUrls(url) {
     return possibleBaseUrls;
 }
 
-export default class PageScrapper {
+class PageScrapper {
     constructor(browser, tests) {
         this.browser = browser;
         this.tests = tests;
@@ -118,6 +118,7 @@ export default class PageScrapper {
             this.initialResponse = rec;
         }
     }
+
     async onResponse(response) {
         const request = response.request();
         const rec = this.requests[request.url()];
@@ -284,3 +285,5 @@ export default class PageScrapper {
         }
     }
 }
+
+module.exports = PageScrapper;

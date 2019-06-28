@@ -22,7 +22,7 @@ async function parseJSONResponse(response) {
     return result;
 }
 
-export default async function parseResponse(response) {
+async function parseResponse(response) {
     const result = {};
     result.status = response.status();
     result.headers = response.headers();
@@ -50,9 +50,14 @@ export default async function parseResponse(response) {
             result.body = await response.text();
         }
     } catch (err) {
-        // Parsing BODY Failed, log error
-        console.log(err);
-        result.body = err;
+        if (err.message && err.message.includes('No resource with given identifier found')) {
+            console.error(`${response.status()} ${response.url()} - ${err.message}`);
+        } else {
+            console.error(err);
+        }
+        result.body = err.message;
     }
     return result;
 }
+
+module.exports = parseResponse;

@@ -5,6 +5,9 @@
         "promise",
         "mocha"
     ],
+    "parserOptions": {
+        "ecmaVersion": 9
+    },
     "env": {
         "node": true,
         "mocha": true

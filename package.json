@@ -1,81 +1,54 @@
 {
-  "name": "apify-page-analyzer",
-  "version": "0.0.1",
-  "description": "Apify page search for JavaScript",
-  "main": "build/index.js",
-  "keywords": [
-    "apify",
-    "apifier",
-    "crawler",
-    "search"
-  ],
-  "author": {
-    "name": "Apify",
-    "email": "support@apify.com",
-    "url": "https://www.apify.com"
-  },
-  "contributors": [
-    "Jan Curn <jan@apify.com>",
-    "Marek Trunkat <marek@apify.com>",
-    "Jaroslav Hejlek <jaroslav@apify.com>"
-  ],
-  "license": "Apache-2.0",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/apifytech/act-page-analyzer"
-  },
-  "bugs": {
-    "url": "https://github.com/apifytech/act-page-analyzer/issues"
-  },
-  "homepage": "https://github.com/apifytech/act-page-analyzer",
-  "files": [
-    "build"
-  ],
-  "scripts": {
-    "start": "npm run build && node build/index.js",
-    "start-local": "npm run build && APIFY_DEV_KEY_VALUE_STORE_DIR=./kv-store-dev/ node build/index.js",
-    "build": "npm run clean && babel src --out-dir build",
-    "build-doc": "npm run clean && npm run build && node ./node_modules/jsdoc/jsdoc.js --package ./package.json -c ./jsdoc/conf.json -d docs",
-    "test": "npm run build && mocha --compilers js:babel-core/register --recursive",
-    "test-cov": "npm run build && babel-node node_modules/isparta/bin/isparta cover --report html --report text node_modules/.bin/_mocha",
-    "prepare": "npm run build",
-    "prepublishOnly": "(test $RUNNING_FROM_SCRIPT || (echo \"You must use publish.sh instead of 'npm publish' directly!\"; exit 1)) && npm test && npm run lint",
-    "clean": "rm -rf build",
-    "lint": "eslint src test"
-  },
-  "dependencies": {
-    "apify": "^0.5.4",
-    "async": "^2.5.0",
-    "bluebird": "^3.5.1",
-    "cheerio": "^1.0.0-rc.2",
-    "handlebars": "^4.0.11",
-    "html-entities": "^1.2.1",
-    "html-to-json": "^0.6.0",
-    "lodash": "^4.17.4",
-    "proxy-chain": "^0.1.15",
-    "puppeteer": "^1.0.0",
-    "request": "^2.83.0",
-    "type-check": "^0.3.2"
-  },
-  "devDependencies": {
-    "apify-jsdoc-template": "github:apifytech/apify-jsdoc-template",
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-eslint": "^8.0.1",
-    "babel-preset-node8": "^1.2.0",
-    "chai": "^4.1.2",
-    "eslint": "^4.9.0",
-    "eslint-config-airbnb-base": "^12.1.0",
-    "eslint-plugin-import": "^2.8.0",
-    "eslint-plugin-jsx-a11y": "6.0.2",
-    "eslint-plugin-mocha": "^4.11.0",
-    "eslint-plugin-promise": "^3.6.0",
-    "eslint-plugin-react": "7.4.0",
-    "isparta": "^4.0.0",
-    "jsdoc": "^3.5.5",
-    "jsdoc-export-default-interop": "^0.3.1",
-    "mocha": "^4.0.1",
-    "sinon": "^4.0.1",
-    "sinon-stub-promise": "^4.0.0"
-  }
+    "name": "apify-page-analyzer",
+    "version": "0.0.2",
+    "description": "Apify page search for JavaScript",
+    "main": "src/index.js",
+    "keywords": [
+        "apify",
+        "apifier",
+        "crawler",
+        "search"
+    ],
+    "author": {
+        "name": "Apify",
+        "email": "support@apify.com",
+        "url": "https://www.apify.com"
+    },
+    "contributors": [
+        "Jan Curn <jan@apify.com>",
+        "Marek Trunkat <marek@apify.com>",
+        "Jaroslav Hejlek <jaroslav@apify.com>"
+    ],
+    "license": "Apache-2.0",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/apifytech/act-page-analyzer"
+    },
+    "bugs": {
+        "url": "https://github.com/apifytech/act-page-analyzer/issues"
+    },
+    "homepage": "https://github.com/apifytech/act-page-analyzer",
+    "scripts": {
+        "start": "node src/index.js",
+        "start-local": "APIFY_LOCAL_STORAGE_DIR=./apify_storage node src/index.js",
+        "test": "mocha --recursive",
+        "clean": "rm -rf build",
+        "lint": "eslint src test"
+    },
+    "dependencies": {
+        "apify": "^0.14.15",
+        "cheerio": "^1.0.0-rc.3",
+        "html-entities": "^1.2.1",
+        "lodash": "^4.17.11",
+        "type-check": "^0.3.2"
+    },
+    "devDependencies": {
+        "chai": "^4.2.0",
+        "eslint": "^5.3.0",
+        "eslint-config-airbnb-base": "^13.1.0",
+        "eslint-plugin-import": "^2.14.0",
+        "eslint-plugin-mocha": "^4.11.0",
+        "eslint-plugin-promise": "^4.2.1",
+        "mocha": "^6.1.4"
+    }
 }

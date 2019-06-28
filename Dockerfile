@@ -1,16 +1,14 @@
-# This act requires puppeteer and node 8
-FROM apify/actor-node-puppeteer
+FROM apify/actor-node-chrome
 
-# Tell Node.js this is a production environemnt
-ENV NODE_ENV=production
+COPY package.json ./
 
-# Copy all files and directories from the directory to the Docker image
+RUN npm --quiet set progress=false \
+    && npm install --only=prod --no-optional \
+    && echo "Installed NPM packages:" \
+    && npm list \
+    && echo "Node.js version:" \
+    && node --version \
+    && echo "NPM version:" \
+    && npm --version
+
 COPY . ./
-
-# Install NPM packages, skip optional and development dependencies to keep the image small,
-# avoid logging to much and show log the dependency tree
-RUN npm install --quiet --only=prod \
- && npm list
-
-# Define that start command
-CMD [ "node", "build/index.js" ]

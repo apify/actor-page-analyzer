@@ -1,12 +1,12 @@
-import cheerio from 'cheerio';
-import { cleanData } from '../utils';
+const cheerio = require('cheerio');
+const { cleanData } = require('../utils');
 
 function extractValue($elem) {
-    return $elem.attr('content') ||
-        $elem.text() ||
-        $elem.attr('src') ||
-        $elem.attr('href') ||
-        null;
+    return $elem.attr('content')
+        || $elem.text()
+        || $elem.attr('src')
+        || $elem.attr('href')
+        || null;
 }
 
 function extractItemScope($, $itemScope) {
@@ -46,7 +46,7 @@ function extractItemScope($, $itemScope) {
     return item;
 }
 
-export default function parseSchemaOrgData({ html, $ }) {
+function parseSchemaOrgData({ html, $ }) {
     if (!$) {
         $ = cheerio.load(html);
     }
@@ -60,3 +60,5 @@ export default function parseSchemaOrgData({ html, $ }) {
     // remove circular references
     return cleanData(result);
 }
+
+module.exports = parseSchemaOrgData;
