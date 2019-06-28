@@ -1,11 +1,11 @@
-import { expect } from 'chai';
-import {
+const { expect } = require('chai');
+const {
     removeHTMLTags,
     removeSpaces,
     convertCommasInNumbers,
     normalize,
     findCommonAncestors,
-} from '../src/utils';
+} = require('../src/utils');
 
 describe('The removeHTMLTags function', () => {
     it('removes HTML Tags', () => {

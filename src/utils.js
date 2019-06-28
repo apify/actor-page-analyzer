@@ -1,26 +1,14 @@
-import request from 'request';
-import { AllHtmlEntities } from 'html-entities';
-import { isString, isArray } from 'lodash';
-
-export const requestPromised = async (opts) => (
-    new Promise((resolve, reject) => (
-        request(opts, (error, response, body) => {
-            if (error) {
-                return reject(error);
-            }
-            return resolve({ body, response });
-        })
-    ))
-);
+const { AllHtmlEntities } = require('html-entities');
+const { isString } = require('lodash');
 
 const entities = new AllHtmlEntities();
 
-export const removeHTMLTags = (text) => text.replace(/<[^>]*>?/g, '');
-export const replaceHTMLEntities = (text) => entities.decode(text);
-export const removeSpaces = (text) => text.replace(/\s/g, '');
-export const convertCommasInNumbers = (text) => text.replace(/(\d+),(\d+)/g, '$1.$2');
+const removeHTMLTags = (text) => text.replace(/<[^>]*>?/g, '');
+const replaceHTMLEntities = (text) => entities.decode(text);
+const removeSpaces = (text) => text.replace(/\s/g, '');
+const convertCommasInNumbers = (text) => text.replace(/(\d+),(\d+)/g, '$1.$2');
 
-export const normalize = (text) => {
+const normalize = (text) => {
     if (!isString(text)) return text;
     let normalized = removeHTMLTags(text);
     normalized = replaceHTMLEntities(normalized);
@@ -29,7 +17,7 @@ export const normalize = (text) => {
     return normalized;
 };
 
-export const cleanData = (data) => {
+const cleanData = (data) => {
     let cache = [];
     const result = JSON.parse(JSON.stringify(data, (key, value) => {
         if (typeof value === 'function') {
@@ -47,7 +35,7 @@ export const cleanData = (data) => {
     return result;
 };
 
-export function findCommonAncestors(data, items, removeFirstCharacter = false) {
+function findCommonAncestors(data, items, removeFirstCharacter = false) {
     const importantAncestors = [];
     items.forEach(({ path }) => {
         const cleanPath = removeFirstCharacter ? path.substr(1) : path;
@@ -71,3 +59,13 @@ export function findCommonAncestors(data, items, removeFirstCharacter = false) {
 
     return cleanedUpProperties;
 }
+
+module.exports = {
+    removeHTMLTags,
+    replaceHTMLEntities,
+    removeSpaces,
+    convertCommasInNumbers,
+    normalize,
+    cleanData,
+    findCommonAncestors,
+};

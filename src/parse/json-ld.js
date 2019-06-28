@@ -1,6 +1,6 @@
-import cheerio from 'cheerio';
+const cheerio = require('cheerio');
 
-export default function parseJsonLD({ html, $ }) {
+function parseJsonLD({ html, $ }) {
     if (!$) {
         $ = cheerio.load(html);
     }
@@ -14,3 +14,5 @@ export default function parseJsonLD({ html, $ }) {
     });
     return result;
 }
+
+module.exports = parseJsonLD;

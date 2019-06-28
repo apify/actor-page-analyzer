@@ -1,5 +1,11 @@
-import { isArray, isObject, sortBy, isNumber, isString } from 'lodash';
-import { normalize } from '../utils';
+const {
+    isArray,
+    isObject,
+    sortBy,
+    isNumber,
+    isString,
+} = require('lodash');
+const { normalize } = require('../utils');
 
 const LETTER_DEDUCTION = 0.01;
 
@@ -85,10 +91,11 @@ function findSimilarPaths(data, paths) {
         });
 }
 
-export default class TreeSearcher {
+class TreeSearcher {
     constructor() {
         this.findInTree = this.findInTree.bind(this);
     }
+
     findInTree(data, path = '', depth = 0) {
         const { normalizedSearch, findInTree } = this;
 
@@ -126,6 +133,7 @@ export default class TreeSearcher {
             });
         }
     }
+
     find(data, searchFor, path = '') {
         this.foundPaths = [];
         this.searchFor = searchFor;
@@ -139,3 +147,5 @@ export default class TreeSearcher {
         return sortedPathsWithDetails;
     }
 }
+
+module.exports = TreeSearcher;

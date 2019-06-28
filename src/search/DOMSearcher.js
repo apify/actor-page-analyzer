@@ -1,6 +1,6 @@
-import cheerio from 'cheerio';
-import { concat, isArray, sortBy } from 'lodash';
-import { normalize } from '../utils';
+const cheerio = require('cheerio');
+const { concat, isArray, sortBy } = require('lodash');
+const { normalize } = require('../utils');
 
 const LETTER_DEDUCTION = 0.01;
 
@@ -43,7 +43,8 @@ function createFullSelector($, item) {
     const path = pathTillUnique.reverse().reduce((partialPath, step, index) => {
         if (index === 0 && foundUnique) {
             return foundUnique;
-        } else if (index === 0) {
+        }
+        if (index === 0) {
             return step.get(0).tagName;
         }
         const uniquePath = findUniqueSelector($, step, partialPath);
@@ -132,7 +133,7 @@ function findSimilarSelectors($, selectors) {
         });
 }
 
-export default class DOMSearcher {
+class DOMSearcher {
     constructor({ $, html }) {
         if (!$ && !html) throw new Error('DOMSearcher requires cheerio instance or HTML code.');
         this.$ = $ || cheerio.load(html);
@@ -206,9 +207,9 @@ export default class DOMSearcher {
         let options = $(selector);
         while (
             (
-                options.length > 1 ||
-                !!partialSelector.match(/(.*):nth-child\((.*)\)/) ||
-                !!partialSelector.match(/^(\w+)$/)
+                options.length > 1
+                || !!partialSelector.match(/(.*):nth-child\((.*)\)/)
+                || !!partialSelector.match(/^(\w+)$/)
             ) && parts.length > 0
         ) {
             lastPart = parts.pop();
@@ -325,3 +326,5 @@ export default class DOMSearcher {
         return selectorsWithDetails;
     }
 }
+
+module.exports = DOMSearcher;

@@ -1,12 +1,13 @@
-import Apify from 'apify';
+const Apify = require('apify');
 
-export default class OutputGenerator {
+class OutputGenerator {
     constructor() {
         this.fields = null;
         this.finishedData = [];
         this.writeTimeout = null;
         this.writeOutput = this.writeOutput.bind(this);
     }
+
     setNewUrl(url) {
         if (this.fields) this.finishedData.push(this.fields);
         this.fields = {
@@ -99,3 +100,5 @@ export default class OutputGenerator {
         this.writeTimeout = setTimeout(this.writeOutput, 100);
     }
 }
+
+module.exports = OutputGenerator;

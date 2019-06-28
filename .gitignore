@@ -1,10 +1,6 @@
 // ignore
 /node_modules
-/coverage
-/kv-store-dev/OUTPUT
-result.json
-test.log
-crawer.js
-yarn.lock
+/apify_storage/key_value_stores/default/OUTPUT.json
+/apify_storage/key_value_stores/default/html.html
 npm-debug.log
 *.log

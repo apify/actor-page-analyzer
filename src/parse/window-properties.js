@@ -1,6 +1,6 @@
-import _ from 'lodash';
+const _ = require('lodash');
 
-export const getNativeWindowProperties = async (page) => {
+const getNativeWindowProperties = async (page) => {
     const keys = await page.evaluate(() => Object.keys(window)) // eslint-disable-line
     // Other concurrent worker might have done the same in the meantime
     const nativeWindowsProperties = {};
@@ -11,18 +11,18 @@ export const getNativeWindowProperties = async (page) => {
 };
 
 // Evaluate window properties, save content for variables that are not function
-export default function evalWindowProperties(properties) {
+function evalWindowProperties(properties) {
     const result = {};
     let cache = [];
 
 
     function isNotImportant(property) {
-        return property === null ||
-            property === '' ||
-            property === {} ||
-            property === [] ||
-            property === true ||
-            property === false;
+        return property === null
+            || property === ''
+            || property === {}
+            || property === []
+            || property === true
+            || property === false;
     }
 
     properties
@@ -60,3 +60,8 @@ export default function evalWindowProperties(properties) {
     cache = null;
     return result;
 }
+
+module.exports = {
+    getNativeWindowProperties,
+    evalWindowProperties,
+};
