@@ -1,6 +1,6 @@
-# act-page-analyzer
+Page analyzer
 
-Apify actor to analyze content of url. You can try out how it's output can be used in our [Page Analyzer](https://www.apify.com/page-analyzer).
+This Apify actor to analyzes a web page on a specific URL. You can try out how it works live in the [Page Analyzer](https://apify.com/page-analyzer) on Apify.
 This actor extracts HTML and javascript variables from main response and HTML/JSON data from XHR requests.
 Then it analyses loaded data:
 1) It performs analysis of initial HTML (html loaded directly from response):
