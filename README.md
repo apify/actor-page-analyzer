@@ -1,6 +1,6 @@
 # Page analyzer
 
-This Apify actor to analyzes a web page on a specific URL. You can try out how it works live in the [Page Analyzer](https://apify.com/page-analyzer) on Apify.
+This Apify actor analyzes a web page on a specific URL. You can try out how it works live in the [Page Analyzer](https://apify.com/page-analyzer) on Apify.
 This actor extracts HTML and javascript variables from main response and HTML/JSON data from XHR requests.
 Then it analyses loaded data:
 1) It performs analysis of initial HTML (html loaded directly from response):
