@@ -39,7 +39,7 @@
         "apify": "^0.14.15",
         "cheerio": "^1.0.0-rc.3",
         "html-entities": "^1.2.1",
-        "lodash": "^4.17.11",
+        "lodash": "^4.17.13",
         "type-check": "^0.3.2"
     },
     "devDependencies": {
