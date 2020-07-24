@@ -4,3 +4,5 @@
 /apify_storage/key_value_stores/default/html.html
 npm-debug.log
 *.log
+
+apify_storage

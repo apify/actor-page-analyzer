@@ -3,7 +3,7 @@ FROM apify/actor-node-chrome
 COPY package.json ./
 
 RUN npm --quiet set progress=false \
-    && npm install --only=prod --no-optional \
+    && npm install --only=prod \
     && echo "Installed NPM packages:" \
     && npm list \
     && echo "Node.js version:" \
