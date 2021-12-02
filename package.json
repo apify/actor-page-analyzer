@@ -36,7 +36,8 @@
         "lint": "eslint src test"
     },
     "dependencies": {
-        "apify": "^0.14.15",
+        "apify": "^2.1",
+        "puppeteer": "*",
         "cheerio": "^1.0.0-rc.3",
         "html-entities": "^1.2.1",
         "lodash": "^4.17.11",

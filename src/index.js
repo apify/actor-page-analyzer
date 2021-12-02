@@ -332,10 +332,7 @@ Apify.main(async () => {
         const tests = input.tests || ['SCHEMA.ORG', 'JSON-LD', 'WINDOW', 'XHR', 'META', 'HTML'];
         output = new OutputGenerator(tests);
 
-        const launchPuppeteerOptions = {
-            stealth: true,
-            headless: true,
-        };
+        const launchPuppeteerOptions = {};
 
         if (process.env.PROXY_GROUP && process.env.PROXY_PASSWORD) {
             const { PROXY_PASSWORD, PROXY_GROUP, PROXY_ADDRESS } = process.env;
