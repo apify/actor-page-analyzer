@@ -2,7 +2,6 @@
     "name": "apify-page-analyzer",
     "version": "0.0.2",
     "description": "Apify page search for JavaScript",
-    "main": "src/index.js",
     "keywords": [
         "apify",
         "apifier",
