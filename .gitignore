@@ -1,9 +1,6 @@
-// ignore
-/node_modules
-/apify_storage/key_value_stores/default/OUTPUT.json
-/apify_storage/key_value_stores/default/html.html
+node_modules
 npm-debug.log
 *.log
 
 apify_storage
-apify_storage
+.idea
