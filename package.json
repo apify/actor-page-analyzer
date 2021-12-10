@@ -37,8 +37,8 @@
     "dependencies": {
         "apify": "^2.1",
         "puppeteer": "*",
-        "cheerio": "*",
-        "html-entities": "^2.3.2",
+        "cheerio": "^1.0.0-rc.3",
+        "html-entities": "^1.2.1",
         "lodash": "^4.17.21",
         "type-check": "^0.4"
     },
